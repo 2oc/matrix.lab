@@ -1,6 +1,6 @@
 # matrix.lab
 
-'''OVERVIEW'''
+## OVERVIEW
 | Hostname  | Purpose | Size |
 | :------------ |:---------------:| -----:|
 | RHEL7A        | KVM Host        | i5-3570K, 16GB
@@ -17,7 +17,7 @@ RHEL7B/C are both RHEV Hypervisors (from RHEL 7)
 
 RHEL7D is a Intel NUC with 2 x SSD installed which basically serves as a NAS (NFS and iSCSI)
 
-'''Build Steps'''
+## Build Steps
 Build RHEL7A from DVD (manually) and register to RHN.
  - populate entire list of KVM guests in /etc/hosts
  - Build RH7SAT6 and register to RHN
@@ -28,7 +28,7 @@ Build RHEL7A from DVD (manually) and register to RHN.
 Build RHEL7D and create iSCSI targets
 Build RHEL7B/7C and use RH6RHEVMGR to make them RHEV Hypervisors and attach them to RHEL7D for Storage
 
-'''NOTES'''
+## NOTES
 In general, I create:
  - a build_KVM.sh script, which relies on .config to identify parameters about each host.
  - <HOSTNAME>.ks file which is the kickstart file (anaconda-ks.cfg) for each host
