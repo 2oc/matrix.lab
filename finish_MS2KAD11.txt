@@ -1,0 +1,16 @@
+Update Time Zone
+Assign Static IP
+Rename system (Computer Name)
+Add Role - Active Directory
+
+Start | Run "dcpromo.exe"
+New Forest: corp.matrix.private
+Domain Functional Level: Windows Server 2003 
+It should then prompt to install a DNS server (click defaults)
+Click Reboot on completion
+
+Add forwarders to the DNS Server
+10.38.5.16
+10.10.10.1
+10.38.68.16
+

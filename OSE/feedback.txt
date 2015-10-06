@@ -1,0 +1,12 @@
+Mod 03 
+  2.3 Registry and the Router
+      3. Deploy the Default Router
+         (you need to add a service account to the oadm router command
+
+Mod 06
+  1.4 Create your First Image (Sinatra)
+      1.  
+        The Sinatra lab needs a line to be updated
+        curl oc get services | grep sin | awk '{print $4":"$5}' | awk -F'/' '{print $1}'
+        -- should be...
+        curl `oc get services | grep sinatra | awk '{ print $2":"$4 }' | cut -f1 -d\/`

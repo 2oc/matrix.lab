@@ -1,0 +1,5 @@
+Build MS2K8AD11
+build rh6clnt11/rh7clnt11
+
+Add Identity Management for UNIX
+https://msdn.microsoft.com/en-us/library/cc731178.aspx

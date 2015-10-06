@@ -1,0 +1,36 @@
+# MISC
+#oc create -f /usr/share/openshift/examples/image-streams/image-streams-rhel7.json -n openshift
+#oc create -f /usr/share/openshift/examples/db-templates -n openshift
+#oc create -f /usr/share/openshift/examples/quickstart-templates -n openshift
+
+# Setting a default route (probably not necessary)
+sed -i "s/router.default.local/cloudapps-${GUID}.oslab.opentlc.com/g" /etc/openshift/master/master-config.yaml
+systemctl restart openshift-master
+
+# Review logs
+journalctl -f -u openshift-master
+journalctl -f -u openshift-node
+
+# Setting a default node (no idea why though?)
+sed -i 's/defaultNodeSelector: ""/defaultNodeSelector: "region=primary"' /etc/openshift/master/master-config.yaml
+systemctl restart openshift-master
+
+# ugg...
+# ERROR: fd02f32d9022: Error pulling image (latest) from docker.io/openshift/hello-openshift, Driver devicemapper failed to create image rootfs 3d8b115ccd046adf638166a337b6ebe8ad2a
+# DO NOT STOP DOCKER
+rm -rf /var/lib/docker/*
+REGISTRY="registry.access.redhat.com"; PTH="openshift3"
+docker pull $REGISTRY/$PTH/ose-haproxy-router:v3.0.0.1 ; docker pull $REGISTRY/$PTH/ose-deployer:v3.0.0.1 ; docker pull $REGISTRY/$PTH/ose-sti-builder:v3.0.0.1 ; docker pull $REGISTRY/$PTH/ose-sti-image-builder:v3.0.0.1 ; docker pull $REGISTRY/$PTH/ose-docker-builder:v3.0.0.1 ; docker pull $REGISTRY/$PTH/ose-pod:v3.0.0.1 ; docker pull $REGISTRY/$PTH/ose-keepalived-ipfailover:v3.0.0.1 ; docker pull $REGISTRY/$PTH/ruby-20-rhel7 ; docker pull $REGISTRY/$PTH/mysql-55-rhel7 ; docker pull openshift/hello-openshift:v0.4.3
+
+# CLEANUP (REMOVE) PROJECT OBJECTS
+oc delete all --all
+
+# Check ETCD health
+etcdctl -C \
+    https://rh7osetcd01.aperture.lab:2379,https://rh7osetcd01.aperture.lab:2379,https://rh7osetcd01.aperture.lab:2379 \
+    --ca-file=/etc/openshift/master/master.etcd-ca.crt \
+    --cert-file=/etc/openshift/master/master.etcd-client.crt \
+    --key-file=/etc/openshift/master/master.etcd-client.key cluster-health
+
+Passwd: r3dh4t1!
+

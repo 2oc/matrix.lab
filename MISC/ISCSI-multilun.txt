@@ -1,0 +1,106 @@
+#!/bin/bash
+
+sed -i -e 's/write_cache_state = 1/write_cache_state = 0/g' /etc/lvm/lvm.conf
+sed -i -e 's/readahead = "auto"/readahead = "none"/g' /etc/lvm/lvm.conf 
+
+yum -y install selinux-policy-targeted.noarch libstoragemgmt-targetd-plugin.noarch targetcli.noarch targetd.noarch
+systemctl enable target
+
+LUNSIZE=40g
+for VG in vg_storage01 vg_storage02 
+do
+  for VOLNUM in `seq 1 5`
+  do
+    lvcreate -nlv_${VOLNUM} -L${LUNSIZE} $VG 
+    ## && mkfs.xfs /dev/${VG}/lv_${VOLNUM} && mkdir -p /var/lib/tgtd/${VG}-lv_${VOLNUM} && echo "/dev/${VG}/lv_${VOLNUM} /var/lib/tgtd/${VG}-lv_${VOLNUM} xfs defaults 1 2" >> /etc/fstab 
+  done
+mount -a
+lvs
+done
+
+######################################################################
+# targetcli clearconfig confirm=true
+# GLOBAL CONFIG STUFF
+CMDFILE=./iscsi-globals.cmd
+echo "targetcli" >> ${CMDFILE}
+echo "set global auto_cd_after_create=false" >> ${CMDFILE}
+echo "set global auto_save_on_exit=true" >> ${CMDFILE}
+echo "cd /" >> ${CMDFILE}
+# GLOBAL AUTHENTICATION
+echo "cd /iscsi" >> ${CMDFILE}
+echo "set discovery_auth enable=0" >> ${CMDFILE}
+#echo "set discovery_auth enable=1" >> ${CMDFILE}
+#echo "set discovery_auth userid=iuser" >> ${CMDFILE}
+#echo "set discovery_auth password=ipass" >> ${CMDFILE}
+#echo "set discovery_auth mutual_userid=mutuser" >> ${CMDFILE}
+#echo "set discovery_auth mutual_password=mutpass" >> ${CMDFILE}
+echo "cd /" >> ${CMDFILE}
+echo "saveconfig" >> ${CMDFILE}
+echo "exit" >> ${CMDFILE}
+
+map_devs() {
+CMDFILE=${TARGET}.cmd
+cat << EOF > ${CMDFILE}
+#!/bin/bash
+EOF
+echo "targetcli" >> ${CMDFILE}
+echo "cd /" >> ${CMDFILE}
+# BACKSTORES
+echo "cd /backstores/" >> ${CMDFILE}
+for DEV in `find /dev/mapper/${TARGET}*lv_[1-5]`; do echo "block/ create name=`echo ${DEV} | cut -f2,3 -d\_` dev=${DEV}"; done >> ${CMDFILE}
+for DEV in `find /dev/mapper/${TARGET}*lv_[1-5]`; do echo "cd /backstores/block/`echo ${DEV} | cut -f2,3 -d\_`"; done >> ${CMDFILE}
+# INSTANTIATE ISCSI 
+echo "cd /iscsi" >> ${CMDFILE}
+echo "create iqn.`date +%Y-%m`.`hostname | awk -F. '{ print $3"."$2"."$1 }'`:`echo ${TARGET} | sed 's/_/-/g'`.target01" >> ${CMDFILE}
+echo "cd /iscsi/iqn.`date +%Y-%m`.`hostname | awk -F. '{ print $3"."$2"."$1 }'`:`echo ${TARGET} | sed 's/_/-/g'`.target01/tpg1/" >> ${CMDFILE}
+# EXPORT LUNS
+echo "cd luns" >> ${CMDFILE}
+for DEV in `find /dev/mapper/${TARGET}*lv_[1-5]`; do echo "create /backstores/block/`echo ${DEV} | cut -f2,3 -d\_`"; done >> ${CMDFILE}
+echo "cd .." >> ${CMDFILE}
+# CREATE NETWORK PORTAL (Doesn't seem to work as advertised)
+# Do not CD in to portals
+echo "portals/ delete 0.0.0.0 3260" >> ${CMDFILE}
+echo "portals/ create `hostname -i`" >> ${CMDFILE}
+
+# DEFINE ACCESS RIGHTS
+echo "cd acls" >> ${CMDFILE}
+echo "create iqn.1994-05.com.redhat:48f573c99f1f" >> ${CMDFILE}
+echo "cd .." >> ${CMDFILE}
+#echo "cd /iscsi/iqn.`date +%Y-%m`.`hostname | awk -F. '{ print $3"."$2"."$1 }'`:`echo ${TARGET} | sed 's/_/-/g'`.target01/tpg1" >> ${CMDFILE}
+#echo "set auth userid=iuser password=ipass mutual_userid=mutuser mutual_password=mutpass" >> ${CMDFILE}
+
+echo "cd /" >> ${CMDFILE}
+echo "saveconfig" >> ${CMDFILE}
+echo "exit" >> ${CMDFILE}
+}
+for VG in vg_storage01 vg_storage02
+do
+  TARGET=$VG
+  map_devs
+done
+
+exit 0
+
+# GLOBAL AUTHENTICATION
+echo "cd /iscsi" >> ${CMDFILE}
+echo "set discovery_auth enable=1" >> ${CMDFILE}
+echo "set discovery_auth userid=discoid" >> ${CMDFILE}
+echo "set discovery_auth password=discopass" >> ${CMDFILE}
+echo "set discovery_auth mutual_userid=mutuser" >> ${CMDFILE}
+echo "set discovery_auth mutual_password=mutpass" >> ${CMDFILE}
+
+
+
+
+iscsiadm --mode discovery --type sendtargets --portal 10.10.10.13 --login --name discovery.sendtargets.auth.username = iuser --name discovery.sendtargets.auth.password = ipass
+
+iscsiadm --mode discovery --type sendtargets --portal 192.168.0.140
+# Display properties
+iscsiadm --mode node -T `iscsiadm --mode discovery --type sendtargets --portal 192.168.0.140 |awk '{ print $2 }'`  --portal 192.168.0.140
+# Login to target
+iscsiadm --mode node -T `iscsiadm --mode discovery --type sendtargets --portal 192.168.0.140 |awk '{ print $2 }'`  --portal 192.168.0.140 -l
+
+# BOTH NODES
+rescan-scsi-bus.sh
+ls -lart /dev/[vsh]d*
+
