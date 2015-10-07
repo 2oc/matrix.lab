@@ -20,35 +20,39 @@ case `hostname -s` in
     yum -y install ansible 
   ;;
 esac
-Passw0rd
+# Passw0rd
 # Distribute Keys to ALL the OSe nodes (master, nodes, routers)
 HOSTLIST="rh7osemst01 rh7osetcd01 rh7osetcd02 rh7osetcd03 rh7oseinf01 rh7oseinf02 rh7osenod01 rh7osenod02"
 if [ ! -f ~/.ssh/id_rsa.pub ]; then echo | ssh-keygen -trsa -b2048 -N''; fi
 
 for HOST in $HOSTLIST
 do
-  ssh-copy-id $HOST
-done
-
-# Register ALL nodes to MY Satellite (skip if using RHN)
-for HOST in $HOSTLIST
-do
-  ssh $HOST "wget 192.168.122.1/register_node.sh"
-  ssh $HOST "sh ./register_node.sh"
+  ssh-copy-id -oStrictHostKeyChecking=no $HOST
 done
 
 # Configure Docker storage
 for HOST in rh7oseinf01 rh7oseinf02 rh7osenod01 rh7osenod02
 do
-    yum -y install docker
-cat << EOF > /tmp/docker-storage-setup
+cat << EOF > /tmp/etc_sysconfig_docker-storage-setup
 # Docker-VG added by setup-script
 DEVS=/dev/vdb
 VG=docker-vg
 SETUP_LVM_THIN_POOL=yes
 EOF
-    scp /tmp/docker-storage-setup ${HOST}:/etc/sysconfig/docker-storage-setup
-    ssh ${HOST} "if [ -b /dev/vdb ]; then /usr/bin/docker-storage-setup; systemctl stop docker; rm -rf /var/lib/docker/*; systemctl start docker; systemctl status docker; fi"
+cat << EOF > /tmp/my-docker-storage-setup
+if [ -b /dev/vdb ] 
+then 
+  /usr/bin/docker-storage-setup 
+  systemctl stop docker
+  rm -rf /var/lib/docker/*  
+  systemctl start docker
+  systemctl status docker
+fi
+EOF
+    ssh ${HOST} "yum -y install docker"
+    scp /tmp/etc_sysconfig_docker-storage-setup ${HOST}:/etc/sysconfig/docker-storage-setup
+    scp /tmp/my-docker-storage-setup ${HOST}:my-docker-storage-setup
+    ssh ${HOST} "sh ./my-docker-storage-setup"
 done
 
 case `hostname -s` in
