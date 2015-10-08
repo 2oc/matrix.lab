@@ -37,7 +37,7 @@ oadm registry --config=/etc/openshift/master/admin.kubeconfig \
 ######################### ######################### #########################
 # Router
 ######################### ######################### #########################
-oadm router trainingrouter --stats-password='Passw0rd' --replicas=2 \
+oadm router harouter --stats-password='Passw0rd' --replicas=2 \
   --config=/etc/openshift/master/admin.kubeconfig  \
   --credentials='/etc/openshift/master/openshift-router.kubeconfig' \
   --images='registry.access.redhat.com/openshift3/ose-haproxy-router:v3.0.0.1' \
@@ -123,7 +123,7 @@ oc describe limitranges limits -n resourcemanagement
 su - oseuser 
 oc login -u oseuser --insecure-skip-tls-verify --server=https://rh7osemst01.aperture.lab:8443
 oc project resourcemanagement
-mkdir resourcemanagement/; cd resourcemanagement/
+mkdir -p ~/proeject/resourcemanagement/; cd $_
 
 cat <<EOF > hello-pod.json
 {
@@ -143,7 +143,6 @@ cat <<EOF > hello-pod.json
         "image": "openshift/hello-openshift:v0.4.3",
         "ports": [
           {
-            "hostPort": 36061,
             "containerPort": 8080,
             "protocol": "TCP"
           }
@@ -298,7 +297,6 @@ EOF
 oc create -f registry-volume-claim.json -n default
 oc volume dc/docker-registry --add --overwrite -t persistentVolumeClaim \
   --claim-name=registry-claim --name=registryvol
-
 
 ######################
 # PROJECT (S2I Build)

@@ -1,3 +1,4 @@
+#!/bin/bash
 
 yum -y install rhevm-guest-agent-common rng-tools
 yum -y update && shutdown now -r
