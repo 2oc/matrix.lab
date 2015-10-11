@@ -38,5 +38,13 @@ EOF
   ;;
 esac
 
+case `dmidecode -s system-manufacturer` in
+  'Red Hat')
+    yum -y install tuned
+    tuned-adm profile virtual-guest
+    subscription-manager repos --enable=rhel-7-server-rhev-mgmt-agent-rpms
+    yum -y install rhevm-guest-agent; systemctl enable ovirt-guest-agent; systemctl start $_
+  ;;
+esac
 
 exit 0

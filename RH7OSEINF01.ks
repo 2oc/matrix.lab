@@ -16,8 +16,9 @@ network --bootproto=static --device=eth0 --ip=10.10.10.135 --netmask=255.255.255
 
 # Root password
 rootpw --iscrypted $6$K6beNUML$Z1KZvoI2k8YryzT0Tz2NkJaNTudnTCFSm0DduMqJE9o/jKnq2kAnX63rs9k7FS8cQp2twDtXXjjrBMV5mju9b.
+user --groups=wheel --name=morpheus --password=$6$03gqrB.BA2aR.mkG$gSzJgslhseoNAe1GojYe8uQG1/mavSGIVf62BDA9MtQkRr06Ua9AXYspTOsdJ61d1QUmEhojWQ7RG.oZeWyu9/ --iscrypted --gecos="Morpheus"
 # System timezone
-timezone America/New_York --isUtc --ntpservers=0.pool.ntp.org,1.pool.ntp.org,2.pool.ntp.org
+timezone America/New_York --isUtc --ntpservers=rh7idm01.matrix.lab,rh7idm02.matrix.lab,rh7sat6.matrix.lab
 
 #########################################################################
 ### DISK ###

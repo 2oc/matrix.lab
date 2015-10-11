@@ -18,15 +18,23 @@ ADMINPASSWD='Passw0rd'
 
 DEFAULTZONE=`firewall-cmd --get-default-zone`
 
-PORTS="80/tcp 443/tcp 389/tcp 636/tcp 88/tcp 88/udp 464/tcp 464/udp 53/tcp 53/udp 123/udp 7389/tcp"
+PORTS="80/tcp 123/tcp 443/tcp 389/tcp 636/tcp 88/tcp 88/udp 464/tcp 464/udp 53/tcp 53/udp 123/udp 7389/tcp"
 for PORT in $PORTS
 do
   firewall-cmd --permanent --zone=${DEFAULTZONE} --add-port=${PORT}
 done
-systemctl disable chronyd && systemctl stop chronyd 
-systemctl enable ntpd && systemctl start ntpd
+
+SVCS=ntp
+for SVC in $SVCS
+do
+  firewall-cmd --permanent --zone=${DEFAULTZONE} --add-service=${SVC}
+done
 firewall-cmd --reload
 firewall-cmd --list-ports
+
+systemctl disable chronyd && systemctl stop chronyd 
+sed -i -e 's/restrict ::1/restrict ::1\nrestrict 192.168.122.0 netmask 255.255.255.0 nomodify notrap/g' /etc/ntp.conf
+systemctl enable ntpd && systemctl start ntpd
 
 yum -y install ipa-server bind bind-dyndb-ldap
 

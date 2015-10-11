@@ -11,7 +11,7 @@ uname -a | grep el6 && RELEASE="6Server" || RELEASE="7Server"
 subscription-manager repos --enable rhel-6-server-rpms --enable rhel-6-server-supplementary-rpms --enable rhel-6-server-rhevm-3.5-rpms --enable jb-eap-6-for-rhel-6-server-rpms
 subscription-manager release --set=$RELEASE
 
-TCP_PORTS="22 80 443 6100"
+TCP_PORTS="22 80 443 6100 8080"
 UDP_PORTS="7410"
 cp /etc/sysconfig/iptables /etc/sysconfig/iptables.bak
 for PORT in $TCP_PORTS

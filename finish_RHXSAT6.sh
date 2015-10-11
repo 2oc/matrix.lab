@@ -35,12 +35,22 @@ case $RELEASE in
   ;;
 esac
 
-TCP_PORTS="80 443 5671 5674 8080 8140 9090" 
-UDP_PORTS="53 67 68 69 80 443 8080"
+yum -y install ntp
+systemctl disable chronyd && systemctl stop chronyd
+sed -i -e 's/restrict ::1/restrict ::1\nrestrict 192.168.122.0 netmask 255.255.255.0 nomodify notrap/g' /etc/ntp.conf
+systemctl enable ntpd && systemctl start ntpd
+
+TCP_PORTS="80 123 443 5671 5674 8080 8140 9090" 
+UDP_PORTS="53 67 68 69 80 123 443 8080"
+SVCS="ntp"
 case $RELEASE in
   7Server)
     echo "`hostname -I` `hostname` `hostname -s` " >> /etc/hosts
     DEFAULT_ZONE=`/bin/firewall-cmd --get-default-zone`
+    for SVC in $SVCS
+    do
+      /bin/firewall-cmd --permanent --zone=$DEFAULT_ZONE --add-service=${SVC}
+    done
     for PORT in $TCP_PORTS
     do
       /bin/firewall-cmd --permanent --zone=$DEFAULT_ZONE --add-port=${PORT}/tcp

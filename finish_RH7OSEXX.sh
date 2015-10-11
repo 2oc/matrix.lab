@@ -1,11 +1,11 @@
 
 ## TO MY OWN SATELLITE ##
 subscription-manager clean
-wget http://rh7sat6.aperture.lab/pub/katello-ca-consumer-latest.noarch.rpm
+wget http://rh7sat6.matrix.lab/pub/katello-ca-consumer-latest.noarch.rpm
 yum -y localinstall katello-ca-consumer-latest.noarch.rpm
-subscription-manager register --org="APERTURELABS" --activationkey="RH7OSE" --release=7.1
+#subscription-manager register --org="MATRIXLABS" --activationkey="RH7OSE" --release=7.1
 
-#subscription-manager register --org="APERTURELABS" --username='admin' --password='Passw0rd' --release=7.1 --auto-attach --force
+subscription-manager register --org="MATRIXLABS" --username='admin' --password='Passw0rd' --release=7.1 --auto-attach --force
 
 subscription-manager release --set=7.1
 #subscription-manager repos --enable=rhel-7-server-rpms --enable=rhel-7-server-ose-3.0-rpms --enable=rhel-7-server-optional-rpms
