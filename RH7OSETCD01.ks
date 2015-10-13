@@ -3,7 +3,7 @@
 auth --enableshadow --passalgo=sha512
 
 # Use network installation
-#url --url="http://10.10.10.1/CentOS-7.1-x86_64/"
+#url --url="http://10.10.10.10/CentOS-7.1-x86_64/"
 # Run the Setup Agent on first boot
 #firstboot --enable
 # Keyboard layouts
@@ -56,6 +56,6 @@ tuned
 %end
 
 %post --log=/root/ks-post.log
-wget http://10.10.10.1/post_install.sh -O /root/post_install.sh
+wget http://10.10.10.10/post_install.sh -O /root/post_install.sh
 %end
 

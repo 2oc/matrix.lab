@@ -1,7 +1,9 @@
 #!/bin/bash
+
+#  USER-CONFIGURABLE STUFF HERE....
+DOMAIN="matrix.lab"
 ORGANIZATION="MATRIXLABS"
 SATELLITE="rh7sat6"
-DOMAIN="matrix.lab"
 
 # NOTE:  need to update this to allow it to be run numerous times (i.e. check whether a condition exists, then update if neccessary)
 
