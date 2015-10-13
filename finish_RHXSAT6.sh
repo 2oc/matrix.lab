@@ -12,7 +12,7 @@ systemctl enable tuned
 # If installing from CD (Sat 6.1), then manually import this key before starting...
 #rpm --import https://www.redhat.com/security/f21541eb.txt
 
-subscription-manager register --username=${RHNUSER} --password='RHNPASSWD'
+subscription-manager register --username="${RHNUSER}" --password="${RHNPASSWD}"
 
 subscription-manager list --available --all > /var/tmp/subscription-manager_list--available--all.out
 POOL=`grep -A15 "Red Hat Satellite 6" /var/tmp/subscription-manager_list--available--all.out | grep "Pool ID:" | awk -F: '{ print $2 }' | sed -e 's/^[ \t]*//' -e 's/[ \t]*$//'`

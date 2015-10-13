@@ -10,7 +10,7 @@
 #   This is not intended to simply be run on a single node... it's still in a form where pieces 
 #     need to be selectively applied (i.e. some steps are run on the master, other on the nodes, other on both...)
 DOMAIN=matrix.lab; WEBREPO=10.10.10.10
-DOMAIN=aperture.lab; WEBREPO=192.168.122.1
+#DOMAIN=aperture.lab; WEBREPO=192.168.122.1
 HAMSTR=0
 
 cat << EOF > hosts
@@ -93,27 +93,40 @@ EOF
    ###########################################################
 ########################### METHOD 3 ############################
    ###########################################################
+cd
 git clone https://github.com/openshift/openshift-ansible
 cd openshift-ansible
 mv /etc/ansible/hosts /etc/ansible/hosts.orig
+MASTERS=`grep rh7osemst hosts`
 case $HAMSTR in
-  0)
+  0|no)
+    echo "# NOTE:  Building OSE using a single master"
     wget ${WEBREPO}/OSE/ose-single_master-multi_etcd.txt -O /etc/ansible/hosts
   ;;
   *)
+    echo "# NOTE:  Building OSE using multiple master"
     wget ${WEBREPO}/OSE/ose-multi_master-multi_etcd.txt -O /etc/ansible/hosts
     for HOST in `grep -i rh7osemst hosts`; do ssh $HOST "subscription-manager repos --enable=rhel-ha-for-rhel-7-server-rpms"; done
-    oc manage-node `grep rh7osemst hosts` --schedulable=false
   ;;
 esac 
-ansible-playbook ~/openshift-ansible/playbooks/byo/config.yml
+cd; ansible-playbook ~/openshift-ansible/playbooks/byo/config.yml
+
+# I believe this is not necessary...
+case $HAMSTR in
+  0|no)
+    echo "# NOTE: Proceeding"
+  ;;
+  *) 
+   oc manage-node `grep rh7osemst hosts` --schedulable=false
+  ;;
+esac  
    ###########################################################
 #################### END OF METHOD 3 ############################
    ###########################################################
   ;;
 esac
-# Put the original ssh config back
-mv ~/.ssh/config-`date +%F` ~/.ssh/config 
+# rm config and put the original ssh config back (if there was one)
+rm ~/.ssh/config && mv ~/.ssh/config-`date +%F` ~/.ssh/config 
 
 # Configure Authentication (HTPASS) 
 useradd oseuser
