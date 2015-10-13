@@ -23,8 +23,8 @@ openshift_master_cluster_public_hostname=rh7osemst.matrix.lab
 
 # host group for masters
 [masters]
-rh7osemst01.matrix.lab
-rh7osemst02.matrix.lab
+rh7osemst01.matrix.lab openshift_schedulable=True
+rh7osemst02.matrix.lab openshift_schedulable=True
 
 # host group for etcd
 [etcd]
