@@ -8,12 +8,14 @@ yum -y install samba samba-client samba-common samba-winbind samba-winbind-clien
 
 service smb start; chkconfig smb on
 
-MYLINE=`grep -n ^server /etc/ntp.conf | head -1 | cut -f1 -d\:`
-sed -i -e '/^server/d' /etc/ntp.conf
-sed -i -e "${MYLINE}iserver 1.pool.ntp.org" /etc/ntp.conf
-sed -i -e "${MYLINE}iserver 0.pool.ntp.org" /etc/ntp.conf
-sed -i -e "${MYLINE}iserver ms2k8ad11.corp.matrix.private" /etc/ntp.conf
-service ntpd start; chkconfig ntpd on
+# FIND WHERE THE SERVER DEFINITION(S) ARE, DELETE THEM, RE-ADD MY OWN
+#  DEFINITIONS
+#MYLINE=`grep -n ^server /etc/ntp.conf | head -1 | cut -f1 -d\:`
+#sed -i -e '/^server/d' /etc/ntp.conf
+#sed -i -e "${MYLINE}iserver 1.pool.ntp.org" /etc/ntp.conf
+#sed -i -e "${MYLINE}iserver 0.pool.ntp.org" /etc/ntp.conf
+#sed -i -e "${MYLINE}iserver ms2k8ad11.corp.matrix.private" /etc/ntp.conf
+#service ntpd start; chkconfig ntpd on
 
 yum -y install krb5-workstation
 cp -p /etc/krb5.conf{,.orig}

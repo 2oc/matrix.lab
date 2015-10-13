@@ -21,7 +21,7 @@ network  --bootproto=static --device=enp0s25 --onboot=on --ipv6=auto --ip=10.10.
 network  --bootproto=dhcp --device=enp3s0 --onboot=off --ipv6=auto
 
 # Root password
-rootpw --iscrypted $6$/rtrqqzFasIO4IWN$tWrmNecAtVghwurw4UcPBR4AbZUn9pJ5/c0.rDCMV7emDSzzG7X0y7dGFKbES6vXT2lgErNuK0S5RfY3ylovp1
+rootpw --iscrypted $6$K6beNUML$Z1KZvoI2k8YryzT0Tz2NkJaNTudnTCFSm0DduMqJE9o/jKnq2kAnX63rs9k7FS8cQp2twDtXXjjrBMV5mju9b.
 # System timezone
 timezone America/New_York --isUtc
 

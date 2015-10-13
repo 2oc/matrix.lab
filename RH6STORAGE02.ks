@@ -3,7 +3,7 @@ cdrom
 lang en_US.UTF-8
 keyboard us
 network --onboot yes --device eth0 --bootproto static --ip 10.10.10.1004 --netmask 255.255.255.0 --gateway 10.10.10.10 --ipv6 auto --nameserver 10.10.10.99 --hostname rh6storage02.matrix.lab --domain matrix.lab
-rootpw  --iscrypted $6$eSsUXtRvzQ1qra.6$o7.9T8R1Dd.2KPcFPt1uf5E23mH8jKXLMfqZzEeqyTzzUd2rh5LtU1tysl1zXmTis8mQFUIjqX97O.X2hZav91
+rootpw --iscrypted $6$K6beNUML$Z1KZvoI2k8YryzT0Tz2NkJaNTudnTCFSm0DduMqJE9o/jKnq2kAnX63rs9k7FS8cQp2twDtXXjjrBMV5mju9b.
 firewall --service=ssh
 authconfig --enableshadow --passalgo=sha512
 selinux --enforcing
