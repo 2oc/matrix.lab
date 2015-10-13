@@ -54,8 +54,6 @@ tuned
 %end
 
 %post --log=/root/ks-post.log
-#wget http://10.10.10.100/pub/bootstrap/bootstrap.sh -O /root/bootstrap.sh
-#wget http://10.10.10.1/post_install.sh -O /root/post_install.sh
-#wget http://10.10.10.1/finish_RH7GIT01.sh -O /root/finish_RH7OSE01.sh
+wget http://10.10.10.1/post_install.sh -O /root/post_install.sh
 %end
 
