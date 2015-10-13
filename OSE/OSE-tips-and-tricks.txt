@@ -32,5 +32,18 @@ etcdctl -C \
     --cert-file=/etc/openshift/master/master.etcd-client.crt \
     --key-file=/etc/openshift/master/master.etcd-client.key cluster-health
 
+# If your ETCD hosts do not include the master...
+#  You will need to run this on a host that has the etcd packages installed
+etcdctl -C \
+   https://rh7osetcd01.matrix.lab:2379,https://rh7osetcd01.matrix.lab:2379,https://rh7osetcd01.matrix.lab:2379 \
+   --ca-file=/etc/etcd/generated_certs/openshift-master-rh7osemst01.matrix.lab/master.etcd-ca.crt \
+   --cert-file=/etc/etcd/generated_certs/openshift-master-rh7osemst01.matrix.lab/master.etcd-client.crt \
+   --key-file=/etc/etcd/generated_certs/openshift-master-rh7osemst01.matrix.lab//master.etcd-client.key cluster-health 
 Passwd: r3dh4t1!
+
+
+# Working on clustered (HA) Masters..
+oc export node rh7osemst02.matrix.lab > rh7osemst01.matrix.lab.json
+sed -i -e 's/rh7osemst02.matrix.lab/rh7osemst01.matrix.lab/g' rh7osemst01.matrix.lab.json
+oc create -f rh7osemst01.matrix.lab.json
 

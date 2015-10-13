@@ -112,13 +112,18 @@ do
       curl -X POST -H "Accept: application/xml" -H "Content-Type: application/xml" -u "${CREDS}" --cacert ${RHEVCRT} -d "<disk><storage_domains><storage_domain id='${STORAGEDOMID}'/></storage_domains><size>${HDDA}</size><type>system</type><interface>virtio</interface><format>cow</format><bootable>false</bootable><description>Data Disk</description></disk>" ${RHEVAPI}/vms/${VMID}/disks
     ;;
   esac
-  # 4. Attach ISO to VM
+  # 4. Attach ISO to VM (this... does not work)
   # The next two lines will (first) retrieve the UUID of the ISO_DOMAIN, then (second) Display the files it has
   # curl -s -u "${CREDS}" --cacert ${RHEVCRT} $OPTIONS -H "${HEADER1}" -X GET ${RHEVAPI}/storagedomains | grep -A3 "<name>ISO_DOMAIN</name>" | grep "link href" | awk -F\" '{ print $2 }' | cut -f4 -d\/`
   # curl -s -u "admin@internal:Passw0rd" --cacert rh6rhevmgr.matrix.lab.cer --insecure  -H "Content-type: application/xml" -X GET https://rh6rhevmgr.matrix.lab:443/api/storagedomains/ba7dc41b-80c0-4417-b259-ff137bd4255e/files
   # curl -X POST -H "Accept: application/xml" -H "Content-Type: application/xml" -u [USER:PASS] --cacert [CERT] -d "<cdrom><file id='rhel-server-6.0-x86_64-dvd.iso'/></cdrom>" https://[RHEVM Host]:8443/api/vms/6efc0cfa-8495-4a96-93e5-ee490328cf48/cdroms
   echo "curl -s -u \"${CREDS}\" --cacert ${RHEVCRT} $OPTIONS -H \"${HEADER1}\" -H \"${HEADER2}\" -X POST -d \"<cdrom><file id='rhel-server-7.1-x86_64-dvd.iso'/></cdrom>\" ${RHEVAPI}/storagedomains/${VMID}/cdroms"
-  curl -s -u "${CREDS}" --cacert ${RHEVCRT} $OPTIONS -H "${HEADER1}" -H "${HEADER2}" -X POST -d "<cdrom><file id='rhel-server-7.1-x86_64-dvd.iso'/></cdrom>" ${RHEVAPI}/storagedomains/${VMID}/cdroms
+  #curl -s -u "${CREDS}" --cacert ${RHEVCRT} $OPTIONS -H "${HEADER1}" -H "${HEADER2}" -X POST -d "<cdrom><file id='rhel-server-7.1-x86_64-dvd.iso'/></cdrom>" ${RHEVAPI}/storagedomains/${VMID}/cdroms
+
+  # 5.  Build the VM (work in progress)
+  # start VM
+  # append to boot string "inst.ks=http://10.10.10.10/${GUESTNAME}.ks"
+
 
   echo
   echo
@@ -140,6 +145,9 @@ case $1 in
   start)
     start_all
   ;;
+  *)
+    echo "# ERROR: unknown option $1 "
+    exit 9
 esac
   
 exit 0

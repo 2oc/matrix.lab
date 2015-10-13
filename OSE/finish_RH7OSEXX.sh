@@ -103,6 +103,7 @@ case $HAMSTR in
   *)
     wget ${WEBREPO}/OSE/ose-multi_master-multi_etcd.txt -O /etc/ansible/hosts
     for HOST in `grep -i rh7osemst hosts`; do ssh $HOST "subscription-manager repos --enable=rhel-ha-for-rhel-7-server-rpms"; done
+    oc manage-node `grep rh7osemst hosts` --schedulable=false
   ;;
 esac 
 ansible-playbook ~/openshift-ansible/playbooks/byo/config.yml
