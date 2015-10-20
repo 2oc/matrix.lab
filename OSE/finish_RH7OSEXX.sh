@@ -32,6 +32,10 @@ do
   #if [ ! -f ~/.ssh/id_rsa.pub ]; then echo | ssh-keygen -trsa -b2048 -N''; fi
   ssh-copy-id -oStrictHostKeyChecking=no $HOST
 done
+for HOST in `cat hosts`
+do
+  ssh $HOST "uptime"
+done
 
 # CONFIGURE REPO(S) 
 for HOST in `cat hosts`; do  
@@ -131,7 +135,7 @@ rm ~/.ssh/config && mv ~/.ssh/config-`date +%F` ~/.ssh/config
 # Configure Authentication (HTPASS) 
 useradd oseuser
 echo Passw0rd | passwd --stdin oseuser
-echo "echo \"oc login -u \`whoami\` --insecure-skip-tls-verify --server=https://rh7osemst01.matrix.lab:8443\" " >> ~oseuser/.bashrc
+echo "echo \"oc login -u \`whoami\` --insecure-skip-tls-verify --server=https://rh7osemst01.${DOMAIN}:8443\" " >> ~oseuser/.bashrc
 
 cp /etc/openshift/master/master-config.yaml /etc/openshift/master/.master-config.yaml.orig
 sed -i -e 's/name: deny_all/name: htpasswd_auth/g' /etc/openshift/master/master-config.yaml
@@ -144,7 +148,7 @@ useradd admin && echo Passw0rd | passwd --stdin admin
 systemctl restart openshift-master
 
 HOSTLIST="rh7oseinf01 rh7oseinf02 rh7osenod01 rh7osenod02"
-for HOST in $HOSTLIST; do ssh $NODE "setsebool -P virt_use_nfs=true"; done
+for NODE in $HOSTLIST; do ssh $NODE "setsebool -P virt_use_nfs=true"; done
 
 exit 0
 

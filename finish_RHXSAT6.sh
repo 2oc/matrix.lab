@@ -106,7 +106,7 @@ cat << EOF > ~/.hammer/cli_config.yml
     :host: 'https://rh7sat6.matrix.lab'
     :username: 'satadmin'
     :password: 'Passw0rd'
-    :organization: 'MATRIX IT Labs'
+    :organization: 'MATRIXLABS'
 
     # Check API documentation cache status on each request
     #:refresh_cache: false
@@ -118,10 +118,10 @@ cat << EOF > ~/.hammer/cli_config.yml
 :log_level: 'error'
 EOF
 
-hammer product create --name='EPEL' --organization='MATRIX IT Labs'
-hammer repository create --name='EPEL 7 - x86_64' --organization='MATRIX IT Labs' --product='EPEL' --content-type='yum' --publish-via-http=true --url=http://dl.fedoraproject.org/pub/epel/7/x86_64/
+hammer product create --name='EPEL' --organization='MATRIXLABS'
+hammer repository create --name='EPEL 7 - x86_64' --organization='MATRIXLABS' --product='EPEL' --content-type='yum' --publish-via-http=true --url=http://dl.fedoraproject.org/pub/epel/7/x86_64/
 
-for i in $(hammer --csv repository list --organization='MATRIX IT' | awk -F, {'print $1'} | grep -vi '^ID'); do echo "hammer repository synchronize --id ${i} --organization='MATRIX IT' --async"; done
+for i in $(hammer --csv repository list --organization='MATRIXLABS' | awk -F, {'print $1'} | grep -vi '^ID'); do echo "hammer repository synchronize --id ${i} --organization='MATRIXLABS' --async"; done
 
 exit 0
 https://rh7sat6.matrix.private/foreman_tasks/tasks?search=state+=+paused
