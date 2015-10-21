@@ -1,29 +1,15 @@
 ################################################################################
-for ITEM in rc nodes pods services dc bc
-do
-  echo "# $ITEM"
-  oc get $ITEM
-  echo
-done
-for ITEM in projects templates 
-do
-  echo "# $ITEM"
-  oc get $ITEM
-done
-for ITEM in sa
-do 
-  echo "# $ITEM"
-  oc get $ITEM
-done
+for ITEM in rc nodes pods services dc bc; do echo "## $ITEM"; oc get $ITEM; echo; done
+for ITEM in projects templates; do echo "## $ITEM"; oc get $ITEM; done
+for ITEM in sa; do echo "## $ITEM"; oc get $ITEM; done
 
-for i in buildconfig deploymentconfig service; do echo $i; oc get $i; echo -e "\n\n"; done
- 
-oc get all
-oc get services
-oc get pods
-oc get rc
-oc get nodes
-oc logs docker-registry-1-deploy
+# for i in buildconfig deploymentconfig service; do echo $i; oc get $i; echo -e "\n\n"; done
+# oc get all
+# oc get services
+# oc get pods
+# oc get rc
+# oc get nodes
+# oc logs docker-registry-1-deploy
 ######################### ######################### ######################### 
 # Registry 
 ######################### ######################### ######################### 
@@ -251,7 +237,6 @@ cd /root/pvs
 cat pv{1..2} | oc create -f - -n default
 cat pv{3..5} | oc create -f - -n test
 
-
 ##########################
 # Declare PVs/PVCs on Master for Registry
 ##########################
@@ -304,7 +289,7 @@ oc volume dc/docker-registry --add --overwrite -t persistentVolumeClaim \
 # On Master
 #  Simple Sinatra using source
 oadm new-project hello-s2i --display-name="Hello Source2Image" \
-    --description="This is the project we use to learn about Source to Image builds" \
+    --description="This project is for Source to Image builds" \
       --node-selector='region=primary' --admin=oseuser
 su - oseuser
 oc login -u oseuser --insecure-skip-tls-verify --server=https://rh7osemst01.matrix.lab:8443
@@ -314,7 +299,7 @@ oc new-app https://github.com/openshift/simple-openshift-sinatra-STI.git -o json
 oc create -f ./simple-sinatra.json -n hello-s2i
 oc get builds
 oc build-logs <build-name>
-curl `oc get services | grep sinatra | awk '{ print $2":"$4 }' | cut -f1 -d\/`
+curl http://`oc get services | grep sinatra | awk '{ print $2":"$4 }' | cut -f1 -d\/`
 
 oc expose service simple-openshift-sinatra \
   --hostname=mysinatra.cloudapps.matrix.lab

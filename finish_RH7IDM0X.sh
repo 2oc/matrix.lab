@@ -33,7 +33,7 @@ firewall-cmd --reload
 firewall-cmd --list-ports
 
 systemctl disable chronyd && systemctl stop chronyd 
-sed -i -e 's/restrict ::1/restrict ::1\nrestrict 192.168.122.0 netmask 255.255.255.0 nomodify notrap/g' /etc/ntp.conf
+sed -i -e 's/restrict ::1/restrict ::1\nrestrict 10.10.10.0 netmask 255.255.255.0 nomodify notrap/g' /etc/ntp.conf
 systemctl enable ntpd && systemctl start ntpd
 
 yum -y install ipa-server bind bind-dyndb-ldap
@@ -127,59 +127,80 @@ ipa dnszone-mod --allow-transfer=10.10.10.1/24 matrix.lab
 
 case `hostname -s` in 
   rh7idm01)
-ipa dnsrecord-add matrix.lab ciscoasa --a-rec 10.10.10.1
-ipa dnsrecord-add matrix.lab rhel7a --a-rec 10.10.10.10
-ipa dnsrecord-add matrix.lab rhel7b --a-rec 10.10.10.11
-ipa dnsrecord-add matrix.lab rhel7c --a-rec 10.10.10.12
-ipa dnsrecord-add matrix.lab rh7os6a --a-rec 10.10.10.20
-ipa dnsrecord-add matrix.lab rh7os6b --a-rec 10.10.10.21
-ipa dnsrecord-add matrix.lab rh7os6c --a-rec 10.10.10.22
-ipa dnsrecord-add matrix.lab rh6ns01 --a-rec 10.10.10.99
+ipa dnsrecord-add matrix.lab gateway --a-rec 10.10.10.1
+ipa dnsrecord-add matrix.lab rh6ns01 --a-rec 10.10.10.10
 ipa dnsrecord-add matrix.lab rh6sat5 --a-rec 10.10.10.100
-ipa dnsrecord-add matrix.lab rh6sat6 --a-rec 10.10.10.101
+ipa dnsrecord-add matrix.lab rh6sam01 --a-rec 10.10.10.101
 ipa dnsrecord-add matrix.lab rh7sat6 --a-rec 10.10.10.102
-ipa dnsrecord-add matrix.lab rh6rhsc --a-rec 10.10.10.109
-ipa dnsrecord-add matrix.lab rh6storage --a-rec 10.10.10.110
-ipa dnsrecord-add matrix.lab rh6storage01 --a-rec 10.10.10.111
-ipa dnsrecord-add matrix.lab rh6storage02 --a-rec 10.10.10.112
-ipa dnsrecord-add matrix.lab rh6storage03 --a-rec 10.10.10.113
-ipa dnsrecord-add matrix.lab rh6storage04 --a-rec 10.10.10.114
-ipa dnsrecord-add matrix.lab rh6rhevmgr --a-rec 10.10.10.125
-ipa dnsrecord-add matrix.lab rh7ose01 --a-rec 10.10.10.131
-ipa dnsrecord-add matrix.lab rh7ose02 --a-rec 10.10.10.132
+ipa dnsrecord-add matrix.lab ms2k8ad --a-rec 10.10.10.109
+ipa dnsrecord-add matrix.lab rh6rhsc --a-rec 10.10.10.110
+ipa dnsrecord-add matrix.lab rh6storage --a-rec 10.10.10.111
+ipa dnsrecord-add matrix.lab rh6storage01 --a-rec 10.10.10.112
+ipa dnsrecord-add matrix.lab rh6storage02 --a-rec 10.10.10.113
+ipa dnsrecord-add matrix.lab rh6storage03 --a-rec 10.10.10.114
+ipa dnsrecord-add matrix.lab rh6storage04 --a-rec 10.10.10.115
+ipa dnsrecord-add matrix.lab rh6nfs --a-rec 10.10.10.116
+ipa dnsrecord-add matrix.lab rh6nfs01 --a-rec 10.10.10.117
+ipa dnsrecord-add matrix.lab rh6nfs02 --a-rec 10.10.10.118
+ipa dnsrecord-add matrix.lab puppet --a-rec 10.10.10.140
 ipa dnsrecord-add matrix.lab rh7puppet01 --a-rec 10.10.10.141
 ipa dnsrecord-add matrix.lab rh7puppet02 --a-rec 10.10.10.142
+ipa dnsrecord-add matrix.lab rh7etcd01 --a-rec 10.10.10.127
+ipa dnsrecord-add matrix.lab rh7etcd02 --a-rec 10.10.10.128
+ipa dnsrecord-add matrix.lab rh7etcd03 --a-rec 10.10.10.129
+ipa dnsrecord-add matrix.lab rh7osemst01 --a-rec 10.10.10.130
+ipa dnsrecord-add matrix.lab rh7osemst02 --a-rec 10.10.10.131
+ipa dnsrecord-add matrix.lab rh7osetcd01 --a-rec 10.10.10.132
+ipa dnsrecord-add matrix.lab rh7osetcd02 --a-rec 10.10.10.133
+ipa dnsrecord-add matrix.lab rh7osetcd03 --a-rec 10.10.10.134
+ipa dnsrecord-add matrix.lab rh7oseinf01 --a-rec 10.10.10.135
+ipa dnsrecord-add matrix.lab rh7oseinf02 --a-rec 10.10.10.136
+ipa dnsrecord-add matrix.lab rh7osenod01 --a-rec 10.10.10.137
+ipa dnsrecord-add matrix.lab rh7osenod02 --a-rec 10.10.10.138
+ipa dnsrecord-add matrix.lab rh6clnt01 --a-rec 10.10.10.201
+ipa dnsrecord-add matrix.lab rh7clnt01 --a-rec 10.10.10.202
+ipa dnsrecord-add matrix.lab rh6clnt11 --a-rec 10.10.10.203
+ipa dnsrecord-add matrix.lab rh7adm01 --a-rec 10.10.10.139
 ipa dnsrecord-add matrix.lab rh6clnt01 --a-rec 10.10.10.201
 ipa dnsrecord-add matrix.lab rh7clnt01 --a-rec 10.10.10.202
 ipa dnsrecord-add matrix.lab rh6clnt11 --a-rec 10.10.10.203
 ipa dnsrecord-add matrix.lab rh7clnt11 --a-rec 10.10.10.204
-
-ipa dnsrecord-add 10.10.10.in-addr.arpa 1 --ptr-rec ciscoasa.matrix.lab.
-ipa dnsrecord-add 10.10.10.in-addr.arpa 10 --ptr-rec rhel7a.matrix.lab.
-ipa dnsrecord-add 10.10.10.in-addr.arpa 11 --ptr-rec rhel7b.matrix.lab.
-ipa dnsrecord-add 10.10.10.in-addr.arpa 12 --ptr-rec rhel7c.matrix.lab.
-ipa dnsrecord-add 10.10.10.in-addr.arpa 20 --ptr-rec rh7os6a.matrix.lab.
-ipa dnsrecord-add 10.10.10.in-addr.arpa 21 --ptr-rec rh7os6b.matrix.lab.
-ipa dnsrecord-add 10.10.10.in-addr.arpa 22 --ptr-rec rh7os6c.matrix.lab.
-ipa dnsrecord-add 10.10.10.in-addr.arpa 99 --ptr-rec rh6ns01.matrix.lab.
+ipa dnsrecord-add 10.10.10.in-addr.arpa 1 --ptr-rec gateway.matrix.lab.
+ipa dnsrecord-add 10.10.10.in-addr.arpa 10 --ptr-rec rh6ns01.matrix.lab.
 ipa dnsrecord-add 10.10.10.in-addr.arpa 100 --ptr-rec rh6sat5.matrix.lab.
-ipa dnsrecord-add 10.10.10.in-addr.arpa 101 --ptr-rec rh6sat6.matrix.lab.
+ipa dnsrecord-add 10.10.10.in-addr.arpa 101 --ptr-rec rh6sam01.matrix.lab.
 ipa dnsrecord-add 10.10.10.in-addr.arpa 102 --ptr-rec rh7sat6.matrix.lab.
-ipa dnsrecord-add 10.10.10.in-addr.arpa 109 --ptr-rec rh6rhsc.matrix.lab.
-ipa dnsrecord-add 10.10.10.in-addr.arpa 110 --ptr-rec rh6storage.matrix.lab.
-ipa dnsrecord-add 10.10.10.in-addr.arpa 111 --ptr-rec rh6storage01.matrix.lab.
-ipa dnsrecord-add 10.10.10.in-addr.arpa 112 --ptr-rec rh6storage02.matrix.lab.
-ipa dnsrecord-add 10.10.10.in-addr.arpa 113 --ptr-rec rh6storage03.matrix.lab.
-ipa dnsrecord-add 10.10.10.in-addr.arpa 114 --ptr-rec rh6storage04.matrix.lab.
-ipa dnsrecord-add 10.10.10.in-addr.arpa 125 --ptr-rec rh6rhevmgr.matrix.lab.
-ipa dnsrecord-add 10.10.10.in-addr.arpa 131 --ptr-rec rh7ose01.matrix.lab.
-ipa dnsrecord-add 10.10.10.in-addr.arpa 132 --ptr-rec rh7ose02.matrix.lab.
+ipa dnsrecord-add 10.10.10.in-addr.arpa 109 --ptr-rec ms2k8ad.matrix.lab.
+ipa dnsrecord-add 10.10.10.in-addr.arpa 110 --ptr-rec rh6rhsc.matrix.lab.
+ipa dnsrecord-add 10.10.10.in-addr.arpa 111 --ptr-rec rh6storage.matrix.lab.
+ipa dnsrecord-add 10.10.10.in-addr.arpa 112 --ptr-rec rh6storage01.matrix.lab.
+ipa dnsrecord-add 10.10.10.in-addr.arpa 113 --ptr-rec rh6storage02.matrix.lab.
+ipa dnsrecord-add 10.10.10.in-addr.arpa 114 --ptr-rec rh6storage03.matrix.lab.
+ipa dnsrecord-add 10.10.10.in-addr.arpa 115 --ptr-rec rh6storage04.matrix.lab.
+ipa dnsrecord-add 10.10.10.in-addr.arpa 116 --ptr-rec rh6nfs.matrix.lab.
+ipa dnsrecord-add 10.10.10.in-addr.arpa 117 --ptr-rec rh6nfs01.matrix.lab.
+ipa dnsrecord-add 10.10.10.in-addr.arpa 118 --ptr-rec rh6nfs02.matrix.lab.
+ipa dnsrecord-add 10.10.10.in-addr.arpa 140 --ptr-rec puppet.matrix.lab.
 ipa dnsrecord-add 10.10.10.in-addr.arpa 141 --ptr-rec rh7puppet01.matrix.lab.
 ipa dnsrecord-add 10.10.10.in-addr.arpa 142 --ptr-rec rh7puppet02.matrix.lab.
+ipa dnsrecord-add 10.10.10.in-addr.arpa 127 --ptr-rec rh7etcd01.matrix.lab.
+ipa dnsrecord-add 10.10.10.in-addr.arpa 128 --ptr-rec rh7etcd02.matrix.lab.
+ipa dnsrecord-add 10.10.10.in-addr.arpa 129 --ptr-rec rh7etcd03.matrix.lab.
+ipa dnsrecord-add 10.10.10.in-addr.arpa 130 --ptr-rec rh7osemst00.matrix.lab.
+ipa dnsrecord-add 10.10.10.in-addr.arpa 131 --ptr-rec rh7osemst01.matrix.lab.
+ipa dnsrecord-add 10.10.10.in-addr.arpa 132 --ptr-rec rh7osetcd01.matrix.lab.
+ipa dnsrecord-add 10.10.10.in-addr.arpa 133 --ptr-rec rh7osetcd02.matrix.lab.
+ipa dnsrecord-add 10.10.10.in-addr.arpa 134 --ptr-rec rh7osetcd03.matrix.lab.
+ipa dnsrecord-add 10.10.10.in-addr.arpa 135 --ptr-rec rh7oseinf01.matrix.lab.
+ipa dnsrecord-add 10.10.10.in-addr.arpa 136 --ptr-rec rh7oseinf02.matrix.lab.
+ipa dnsrecord-add 10.10.10.in-addr.arpa 137 --ptr-rec rh7osenod01.matrix.lab.
+ipa dnsrecord-add 10.10.10.in-addr.arpa 138 --ptr-rec rh7osenod02.matrix.lab.
+ipa dnsrecord-add 10.10.10.in-addr.arpa 139 --ptr-rec rh7adm01.matrix.lab.
 ipa dnsrecord-add 10.10.10.in-addr.arpa 201 --ptr-rec rh6clnt01.matrix.lab.
 ipa dnsrecord-add 10.10.10.in-addr.arpa 202 --ptr-rec rh7clnt01.matrix.lab.
 ipa dnsrecord-add 10.10.10.in-addr.arpa 203 --ptr-rec rh6clnt11.matrix.lab.
 ipa dnsrecord-add 10.10.10.in-addr.arpa 204 --ptr-rec rh7clnt11.matrix.lab.
+
   ;;
 esac
 
