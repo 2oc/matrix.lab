@@ -1,0 +1,30 @@
+Installing MS2K8AD (RHEV)
+Build the VM, select Windows 2008.
+Select Run Once, make sure you add the virtio-win_amd64.vfd as the floppy. [sysprep] will be the default.
+You will need to select Custom and actually BROWSE the floppy and point it at a:\amd64\Win2008R2\ - then select "Red Hat VirtIO SCSI controller"
+It will take a while to read the disk, it should then have found your virtual disk.
+
+Enter an Administrator Password
+
+Update the Network settings (own IP and 8.8.8.8 for DNS)
+Activate Windows (if you have a key)
+Rename system (don't worry about Workgroup though)
+Update the Time Zone
+Copy the virtio-win ISO to C:\Download\VirtIO\
+Then attach the rhev-tools ISO and copy the contents to C:\Download\RHEV Tools\
+
+Enable automatic updating and feedback then patch the box
+
+In the "Initial Configuration Tasks" window that seems to pop-up, click on Add roles unde the Customize This Server section.  Then select Active Directory Domain Services" and the dependencies that will pop-up (like .NET).
+
+# THINK THIS IS NEEDED FOR TLS
+Add Role
+ - Certificate Authority
+Then following this:
+http://social.technet.microsoft.com/wiki/contents/articles/2980.ldap-over-ssl-ldaps-certificate.aspx
+Then copy that cert to rh7osemst01.matrix.lab
+
+# Service Accounts
+https://technet.microsoft.com/en-us/library/dd548356%28v=ws.10%29.aspx
+/usr/libexec/qemu-kvm -name MS2K8AD -S -machine rhel6.5.0,accel=kvm,usb=off -cpu Nehalem,hv_relaxed -m 1024 -realtime mlock=off -smp 1,maxcpus=16,sockets=16,cores=1,threads=1 -uuid a112aae4-1272-4d5a-b1f0-6bf1a28a3d33 -smbios type=1,manufacturer=Red Hat,product=RHEV Hypervisor,version=7.1-1.el7,serial=DAE80F4C-A481-E111-8DA9-643150437BC1,uuid=a112aae4-1272-4d5a-b1f0-6bf1a28a3d33 -no-user-config -nodefaults -chardev socket,id=charmonitor,path=/var/lib/libvirt/qemu/MS2K8AD.monitor,server,nowait -mon chardev=charmonitor,id=monitor,mode=control -rtc base=2015-10-20T20:45:11,clock=vm,driftfix=slew -global kvm-pit.lost_tick_policy=discard -no-hpet -no-shutdown -boot strict=on -device piix3-usb-uhci,id=usb,bus=pci.0,addr=0x1.0x2 -device virtio-scsi-pci,id=scsi0,bus=pci.0,addr=0x4 -device virtio-serial-pci,id=virtio-serial0,max_ports=16,bus=pci.0,addr=0x5 -drive file=/var/run/vdsm/payload/a112aae4-1272-4d5a-b1f0-6bf1a28a3d33.6339d79d71df1a54af3f2a41b5dd997d.img,if=none,id=drive-fdc0-0-0,readonly=on,format=raw,serial= -global isa-fdc.driveA=drive-fdc0-0-0 -drive file=/rhev/data-center/mnt/rh6rhevmgr.matrix.lab:_var_lib_exports_iso_/ba7dc41b-80c0-4417-b259-ff137bd4255e/images/11111111-1111-1111-1111-111111111111/GRMSXVOL_EN_DVD.iso,if=none,id=drive-ide0-1-0,readonly=on,format=raw,serial= -device ide-cd,bus=ide.1,unit=0,drive=drive-ide0-1-0,id=ide0-1-0,bootindex=2 -drive file=/rhev/data-center/00000002-0002-0002-0002-000000000256/1ca91e96-fe4b-4c2e-a867-5b32a57c1d49/images/2cff33ed-8975-4957-9015-92bd74591e63/b6c6df1e-698e-4c7e-a515-15577950bf83,if=none,id=drive-virtio-disk0,format=qcow2,serial=2cff33ed-8975-4957-9015-92bd74591e63,cache=none,werror=stop,rerror=stop,aio=native -device virtio-blk-pci,scsi=off,bus=pci.0,addr=0x6,drive=drive-virtio-disk0,id=virtio-disk0,bootindex=1 -netdev tap,fd=37,id=hostnet0,vhost=on,vhostfd=38 -device virtio-net-pci,netdev=hostnet0,id=net0,mac=00:1a:4a:60:41:09,bus=pci.0,addr=0x3,bootindex=3 -chardev socket,id=charchannel0,path=/var/lib/libvirt/qemu/channels/a112aae4-1272-4d5a-b1f0-6bf1a28a3d33.com.redhat.rhevm.vdsm,server,nowait -device virtserialport,bus=virtio-serial0.0,nr=1,chardev=charchannel0,id=channel0,name=com.redhat.rhevm.vdsm -chardev socket,id=charchannel1,path=/var/lib/libvirt/qemu/channels/a112aae4-1272-4d5a-b1f0-6bf1a28a3d33.org.qemu.guest_agent.0,server,nowait -device virtserialport,bus=virtio-serial0.0,nr=2,chardev=charchannel1,id=channel1,name=org.qemu.guest_agent.0 -chardev spicevmc,id=charchannel2,name=vdagent -device virtserialport,bus=virtio-serial0.0,nr=3,chardev=charchannel2,id=channel2,name=com.redhat.spice.0 -spice tls-port=5906,addr=10.10.10.12,x509-dir=/etc/pki/vdsm/libvirt-spice,tls-channel=main,tls-channel=display,tls-channel=inputs,tls-channel=cursor,tls-channel=playback,tls-channel=record,tls-channel=smartcard,tls-channel=usbredir,seamless-migration=on -k en-us -device qxl-vga,id=video0,ram_size=67108864,vram_size=33554432,vgamem_mb=16,bus=pci.0,addr=0x2 -device virtio-balloon-pci,id=balloon0,bus=pci.0,addr=0x7 -msg timestamp=on
+
