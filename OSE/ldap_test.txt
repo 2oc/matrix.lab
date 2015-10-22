@@ -1,0 +1,94 @@
+ldapsearch \
+ -x -h ms2k8ad.matrix.lab \
+ -D "oseconnector@matrix.lab" \
+ -w "Passw0rd" \
+ -b "cn=users,dc=matrix,dc=lab" \
+ -s sub "(cn=*)" dn mail cn uid
+
+curl ldap://ms2k8ad.matrix.lab:389/cn="James Radtke",cn=Users,dc=matrix,dc=lab -u "oseconnector@matrix.lab:Passw0rd"
+
+ldapsearch \
+ -x -h ms2k8ad.matrix.lab \
+ -D "CN=OSE Connector,CN=Users,DC=matrix,DC=lab" \
+ -w "Passw0rd" \
+ -b "cn=users,dc=matrix,dc=lab" \
+ -s sub "(cn=OSE Connector)"
+
+# For IDM
+ldapsearch -x -h rh7idm01.matrix.lab -D "CN=directory manager" -w "Passw0rd" -b "dc=matrix,dc=lab" -s sub "(cn=*)"
+
+exit 0
+
+# INSECURE
+  identityProviders:
+  - name: "matrix_insecure"
+    challenge: true
+    login: true
+    provider:
+      apiVersion: v1
+      kind: LDAPPasswordIdentityProvider
+      attributes:
+        id:
+        - dn
+        email:
+        - mail
+        name:
+        - cn
+        preferredUsername:
+        - uid
+      bindDN: "CN=OSE Connector,CN=Users,DC=matrix,DC=lab"
+      bindPassword: Passw0rd“
+      insecure: true
+      ca: ""
+      url: "ldap://ms2k8ad.matrix.lab/dc=matrix,dc=lab?sAMAccountName"
+
+# SECURE
+  identityProviders:
+  - name: matrix_paas_ldap_provider
+    challenge: true
+    login: true
+    provider:
+      apiVersion: v1
+      kind: LDAPPasswordIdentityProvider
+      attributes:
+        id:
+        - dn
+        email:
+        - mail
+        name:
+        - cn
+        preferredUsername:
+        - uid
+      bindDN: ""
+      bindPassword: "Passw0rd“
+      ca: my-ldap-ca-bundle.crt
+      insecure: false
+      url: "ldap://ms2k8ad.matrix.lab:389/dc=matrix,dc=lab?uid"
+
+# Steps
+* Create a "Service Account" in AD to use as a connector.
+ - If possible make sure the password does not expire
+ - The term "Service Account" is used loosely - it does not mean a:
+   "Managed Service Account" - just make sure it is not an account that 
+   is managed like a "normal" user account 
+      (i.e. frequent password changes, etc..)
+* Test an LDAP query using ldapsearch and/or curl to see what "fields" 
+  are present and how they line up to what you are expecting.
+ - I.e. if the user expects to run oc login -u 'osetest', then you need
+   to figure out what LDAP field contains 'osetest'  
+      in my case, it is: sAMAccountName
+* Update your identityProviders: (/etc/openshift/master/master-config.yaml)
+
+
+ - Important to note: whatever you select for identityProviders:name will be prepended to the Identity
+  ** EXAMPLE **
+  identityProviders:
+  - name: "matrix_insecure"
+
+[root@rh7osemst01 ~]# oc get users
+NAME                                        UID                                    FULL NAME      IDENTITIES
+CN=James Radtke,CN=Users,DC=matrix,DC=lab   fbd72db6-78f7-11e5-809d-001a4a604100   James Radtke   matrix_insecure:CN=James Radtke,CN=Users,DC=matrix,DC=lab
+CN=OSE User,CN=Users,DC=matrix,DC=lab       7bbf8e01-78f7-11e5-809d-001a4a604100   OSE User       matrix_insecure:CN=OSE User,CN=Users,DC=matrix,DC=lab
+jradtke                                     8f86c2da-7794-11e5-b600-001a4a604100                  htpasswd_auth:jradtke
+oseuser                                     72ee57b5-779a-11e5-b600-001a4a604100                  htpasswd_auth:oseuser
+
