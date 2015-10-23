@@ -42,30 +42,8 @@ exit 0
       ca: ""
       url: "ldap://ms2k8ad.matrix.lab/dc=matrix,dc=lab?sAMAccountName"
 
-# SECURE
-  identityProviders:
-  - name: matrix_paas_ldap_provider
-    challenge: true
-    login: true
-    provider:
-      apiVersion: v1
-      kind: LDAPPasswordIdentityProvider
-      attributes:
-        id:
-        - dn
-        email:
-        - mail
-        name:
-        - cn
-        preferredUsername:
-        - uid
-      bindDN: ""
-      bindPassword: "Passw0rd“
-      ca: my-ldap-ca-bundle.crt
-      insecure: false
-      url: "ldap://ms2k8ad.matrix.lab:389/dc=matrix,dc=lab?uid"
 
-# Steps
+# Steps to configure LDAP IdentityProvider
 * Create a "Service Account" in AD to use as a connector.
  - If possible make sure the password does not expire
  - The term "Service Account" is used loosely - it does not mean a:
@@ -89,6 +67,10 @@ exit 0
 NAME                                        UID                                    FULL NAME      IDENTITIES
 CN=James Radtke,CN=Users,DC=matrix,DC=lab   fbd72db6-78f7-11e5-809d-001a4a604100   James Radtke   matrix_insecure:CN=James Radtke,CN=Users,DC=matrix,DC=lab
 CN=OSE User,CN=Users,DC=matrix,DC=lab       7bbf8e01-78f7-11e5-809d-001a4a604100   OSE User       matrix_insecure:CN=OSE User,CN=Users,DC=matrix,DC=lab
-jradtke                                     8f86c2da-7794-11e5-b600-001a4a604100                  htpasswd_auth:jradtke
-oseuser                                     72ee57b5-779a-11e5-b600-001a4a604100                  htpasswd_auth:oseuser
+
+[root@rh7osemst01 ~]# su - oseuser
+[oseuser@rh7osemst01 ~]$ oc login -u oseuser -p 'Passw0rd' --insecure-skip-tls-verify --server=https://rh7osemst01.matrix.lab:8443
+Login successful.
+
+Using project "hello-s2i".
 

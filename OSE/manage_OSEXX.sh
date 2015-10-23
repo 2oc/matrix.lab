@@ -10,6 +10,7 @@ for ITEM in sa; do echo "## $ITEM"; oc get $ITEM; done
 # oc get rc
 # oc get nodes
 # oc logs docker-registry-1-deploy
+
 ######################### ######################### ######################### 
 # Registry 
 ######################### ######################### ######################### 
@@ -20,6 +21,7 @@ oadm registry --config=/etc/openshift/master/admin.kubeconfig \
 #oadm registry --config=/etc/openshift/master/admin.kubeconfig \
 #    --credentials=/etc/openshift/master/openshift-registry.kubeconfig \
 #    --images='rh7sat6.aperture.lab/openshift3/ose-${component}:${version}'
+
 ######################### ######################### #########################
 # Router
 ######################### ######################### #########################
@@ -28,6 +30,92 @@ oadm router harouter --stats-password='Passw0rd' --replicas=2 \
   --credentials='/etc/openshift/master/openshift-router.kubeconfig' \
   --images='registry.access.redhat.com/openshift3/ose-haproxy-router:v3.0.0.1' \
   --selector='region=infra' --service-account=router
+
+######################### ######################### #########################
+# SERVICES
+######################### ######################### #########################
+oadm new-project svcslab --display-name="Services Lab" \
+    --description="This is the project we use to learn about services" \
+    --admin=oseuser --node-selector='region=primary'
+
+##########################
+# Declare PVs/PVCs on Master for *whatever*
+##########################
+mkdir /root/pvs
+export volsize="1Gi"
+for volume in pv{1..10} ; do
+cat << EOF > /root/pvs/${volume}
+{
+  "apiVersion": "v1",
+  "kind": "PersistentVolume",
+  "metadata": {
+    "name": "${volume}"
+  },
+  "spec": {
+    "capacity": {
+        "storage": "${volsize}"
+    },
+    "accessModes": [ "ReadWriteOnce" ],
+    "nfs": {
+        "path": "/export/nfs/pvs/${volume}",
+        "server": "10.10.10.13"
+    },
+    "persistentVolumeReclaimPolicy": "Recycle"
+  }
+}
+EOF
+echo "Created def file for ${volume}";
+done
+cd /root/pvs
+cat pv{1..2} | oc create -f - -n default
+cat pv{3..5} | oc create -f - -n test
+
+##########################
+# Declare PVs/PVCs on Master for Registry
+##########################
+cat << EOF > registry-volume.json
+    {
+      "apiVersion": "v1",
+      "kind": "PersistentVolume",
+      "metadata": {
+        "name": "registry-storage"
+      },
+      "spec": {
+        "capacity": {
+            "storage": "15Gi"
+            },
+        "accessModes": [ "ReadWriteMany" ],
+        "nfs": {
+            "path": "/export/nfs/pvs/registryvol",
+            "server": "rhel7d.matrix.lab"
+        }
+      }
+    }
+
+EOF
+oc create -f registry-volume.json -n default
+cat << EOF > registry-volume-claim.json
+    {
+      "apiVersion": "v1",
+      "kind": "PersistentVolumeClaim",
+      "metadata": {
+        "name": "registry-claim"
+      },
+      "spec": {
+        "accessModes": [ "ReadWriteMany" ],
+        "resources": {
+          "requests": {
+            "storage": "3Gi"
+          }
+        }
+      }
+    }
+
+EOF
+oc create -f registry-volume-claim.json -n default
+oc volume dc/docker-registry --add --overwrite -t persistentVolumeClaim \
+  --claim-name=registry-claim --name=registryvol
+
 ######################### ######################### ######################### 
 # PROJECTS
 ######################### ######################### ######################### 
@@ -160,150 +248,31 @@ cat <<EOF > hello-pod.json
 EOF
 oc create -f hello-pod.json -n resourcemanagement
 
-######################### ######################### #########################
-# SERVICES
-######################### ######################### #########################
-oadm new-project svcslab --display-name="Services Lab" \
-    --description="This is the project we use to learn about services" \
-    --admin=oseuser --node-selector='region=primary'
-
-######################### ######################### #########################
-# NFS for Persistent Volumes (PVS) and Registry Storage
-######################### ######################### #########################
-#  On NFS "Server"
-VG=rhel
-LVSIZE=3g
-cp /etc/fstab /etc/fstab.bak-`date +%F`
-cp /etc/exports /etc/exports.bak-`date +%F`
-for VOLUME in pv{1..10}  
-do
-  lvcreate -L${LVSIZE} -nlv_${VOLUME} $VG
-  mkfs.xfs -f /dev/mapper/${VG}-lv_${VOLUME}
-  mkdir -p /export/nfs/pvs/${VOLUME}
-  echo "/dev/mapper/${VG}-lv_${VOLUME} /export/nfs/pvs/${VOLUME} xfs defaults 0 0" >> /etc/fstab
-  echo "/export/nfs/pvs/${VOLUME} 10.10.10.0/24(rw,sync,all_squash)" >> /etc/exports
-done
-mount -a
-for VOLUME in pv{1..10}  
-do
-  chown nfsnobody:nfsnobody /export/nfs/pvs/${VOLUME}
-  chmod 700  /export/nfs/pvs/${VOLUME}
-done
-systemctl restart nfs
-exportfs -a
-
-VG=rhel
-LVSIZE=1g
-VOLUME=registryvol
-lvcreate -L${LVSIZE} -nlv_${VOLUME} $VG
-mkfs.xfs -f /dev/mapper/${VG}-lv_${VOLUME}
-mkdir -p /export/nfs/pvs/${VOLUME}
-echo "/dev/mapper/${VG}-lv_${VOLUME} /export/nfs/pvs/${VOLUME} xfs defaults 0 0" >> /etc/fstab
-echo "/export/nfs/pvs/${VOLUME} *(rw,sync,all_squash)" >> /etc/exports
-mount /export/nfs/pvs/${VOLUME} 
-chown nfsnobody:nfsnobody /export/nfs/pvs/${VOLUME}
-chmod 700  /export/nfs/pvs/${VOLUME}
-systemctl restart nfs
-
-##########################
-# Declare PVs/PVCs on Master for *whatever*
-##########################
-mkdir /root/pvs
-export volsize="1Gi"
-for volume in pv{1..10} ; do
-cat << EOF > /root/pvs/${volume}
-{
-  "apiVersion": "v1",
-  "kind": "PersistentVolume",
-  "metadata": {
-    "name": "${volume}"
-  },
-  "spec": {
-    "capacity": {
-        "storage": "${volsize}"
-    },
-    "accessModes": [ "ReadWriteOnce" ],
-    "nfs": {
-        "path": "/export/nfs/pvs/${volume}",
-        "server": "10.10.10.13"
-    },
-    "persistentVolumeReclaimPolicy": "Recycle"
-  }
-}
-EOF
-echo "Created def file for ${volume}";
-done
-cd /root/pvs
-cat pv{1..2} | oc create -f - -n default
-cat pv{3..5} | oc create -f - -n test
-
-##########################
-# Declare PVs/PVCs on Master for Registry
-##########################
-cat << EOF > registry-volume.json
-    {
-      "apiVersion": "v1",
-      "kind": "PersistentVolume",
-      "metadata": {
-        "name": "registry-storage"
-      },
-      "spec": {
-        "capacity": {
-            "storage": "15Gi"
-            },
-        "accessModes": [ "ReadWriteMany" ],
-        "nfs": {
-            "path": "/export/nfs/pvs/registryvol",
-            "server": "rhel7d.matrix.lab"
-        }
-      }
-    }
-
-EOF
-oc create -f registry-volume.json -n default 
-cat << EOF > registry-volume-claim.json
-    {
-      "apiVersion": "v1",
-      "kind": "PersistentVolumeClaim",
-      "metadata": {
-        "name": "registry-claim"
-      },
-      "spec": {
-        "accessModes": [ "ReadWriteMany" ],
-        "resources": {
-          "requests": {
-            "storage": "3Gi"
-          }
-        }
-      }
-    }
-
-EOF
-oc create -f registry-volume-claim.json -n default
-oc volume dc/docker-registry --add --overwrite -t persistentVolumeClaim \
-  --claim-name=registry-claim --name=registryvol
-
 ######################
 # PROJECT (S2I Build)
 ######################
 # On Master
 #  Simple Sinatra using source
-oadm new-project hello-s2i --display-name="Hello Source2Image" \
+MYPROJ='hello-s2i'
+oadm new-project ${MYPROJ} --display-name="Hello Source2Image" \
     --description="This project is for Source to Image builds" \
       --node-selector='region=primary' --admin=oseuser
+# Since I have now "plumbed my ENV to AD"....
+oc policy add-role-to-user admin 'CN=OSE User,CN=Users,DC=matrix,DC=lab' -n hello-s2i
+
 su - oseuser
 oc login -u oseuser --insecure-skip-tls-verify --server=https://rh7osemst01.matrix.lab:8443
-oc project hello-s2i
-mkdir -p projects/hello-s2i && cd $_
+MYPROJ='hello-s2i'
+mkdir -p ~/Projects/${MYPROJ}; cd $_
+oc project ${MYPROJ} 
 oc new-app https://github.com/openshift/simple-openshift-sinatra-STI.git -o json | tee ./simple-sinatra.json
-oc create -f ./simple-sinatra.json -n hello-s2i
-oc get builds
-oc build-logs <build-name>
+oc create -f ./simple-sinatra.json -n ${MYPROJ}
+oc build-logs `oc get builds | grep sinatra | awk '{ print $1 }'`
 curl http://`oc get services | grep sinatra | awk '{ print $2":"$4 }' | cut -f1 -d\/`
 
 oc expose service simple-openshift-sinatra \
   --hostname=mysinatra.cloudapps.matrix.lab
-oc edit route
+# oc edit route
 
 ###################################
 #  Simple Sinatra using my update 
