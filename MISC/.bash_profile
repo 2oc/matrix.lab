@@ -32,7 +32,8 @@ case `uname` in
  ;;
  Linux)
    #set_title "${USER}@${HOSTNAME}"
-   #echo -e "\033];${title}\007";
+   echo -e "\033]0;${TITLE}\007";
+   PATH=$PATH:/usr/share/openshift/linux
  ;;
  Darwin)
    # Placeholder for Apple Mac OS X
