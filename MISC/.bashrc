@@ -16,7 +16,6 @@ function set_title {
 alias vms="sudo virsh list --inactive --all"
 alias vv="sudo virt-viewer ${1}"
 
-alias jumpp="ssh -e 'none' -o TCPKeepAlive=yes -o ServerAliveInterval=50 -l 'jradtke@corp.siriusxm.com' pdgllvjmpsrv01.corp.siriusxm.com"
 alias doover='/usr/bin/sudo $(history -p \!\!)' 
 alias please='/usr/bin/sudo $(history -p !!)'
 alias itunes='/usr/bin/vncviewer cypher.matrix.private'
