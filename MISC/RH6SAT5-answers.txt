@@ -16,7 +16,7 @@ admin-email = root@rh6sat5.matrix.private
 # '--re-register' commandline option is used.  Not used at all if the
 # '--disconnected' commandline option is used.
 
-rhn-username = rhn-gps-jradtke
+rhn-username = ''
 rhn-password = ''
 
 # HTTP proxy.  Not Required.
