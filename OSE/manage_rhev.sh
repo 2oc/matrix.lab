@@ -145,6 +145,9 @@ case $1 in
   start)
     start_all
   ;;
+  list)
+    list 
+  ;;
   *)
     echo "# ERROR: unknown option $1 "
     exit 9
