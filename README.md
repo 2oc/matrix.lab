@@ -22,11 +22,10 @@ Build RHEL7A from DVD (manually) and register to RHN.
  - populate entire list of KVM guests in /etc/hosts
  - Build RH7SAT6 and register to RHN
  - Build RH7IDM01/02 and register to RH7SAT6
- -- update DNS using 'ipa' command found in finish script
+  - update DNS using 'ipa' command found in finish script
  - Build RH6RHEVMGR
-
-Build RHEL7D and create iSCSI targets
-Build RHEL7B/7C and use RH6RHEVMGR to make them RHEV Hypervisors and attach them to RHEL7D for Storage
+ - Build RHEL7D and create iSCSI targets
+ - Build RHEL7B/7C and use RH6RHEVMGR to make them RHEV Hypervisors and attach them to RHEL7D for Storage
 
 ## NOTES
 In general, I create:
