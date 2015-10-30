@@ -31,8 +31,8 @@ Build RHEL7B/7C and use RH6RHEVMGR to make them RHEV Hypervisors and attach them
 ## NOTES
 In general, I create:
  - a build_KVM.sh script, which relies on .config to identify parameters about each host.
- - <HOSTNAME>.ks file which is the kickstart file (anaconda-ks.cfg) for each host
+ - \<HOSTNAME\>.ks file which is the kickstart file (anaconda-ks.cfg) for each host
  - ./post_install.sh a script that *should* end up in /root post kickstart.  This script registers node to Satellite and
     performs some housekeeping.
- - finish_<HOSTNAME>.sh which should contain all the post-build steps
+ - finish_\<HOSTNAME\>.sh which should contain all the post-build steps
 
