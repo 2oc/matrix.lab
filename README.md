@@ -38,11 +38,11 @@ In general, I create:
 
 
 ```
-echo "RH7IDM01:EL7:2:2048:20:0" >> .config
-./build_KVM.sh RH7IDM01
-ssh RH7IDM01
-./post_install.sh
-wget http://10.10.10.10/finish_RH7IDM01.sh
-chmod u+x finish_RH7IDM01.sh
-./finish_RH7IDM01.sh
+# echo "RH7IDM01:EL7:2:2048:20:0" >> .config
+# ./build_KVM.sh RH7IDM01
+# ssh RH7IDM01
+# ./post_install.sh
+# wget http://10.10.10.10/finish_RH7IDM01.sh
+# chmod u+x finish_RH7IDM01.sh
+# ./finish_RH7IDM01.sh
 ```
