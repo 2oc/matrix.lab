@@ -42,7 +42,6 @@ logvol /home --fstype=xfs --vgname=vg_rh7osetcd03 --name=lv_home --label="home" 
 logvol /tmp --fstype=xfs --vgname=vg_rh7osetcd03 --name=lv_tmp --label="temp" --size=1024
 logvol /var/lib/etcd --fstype=xfs --vgname=vg_rh7osetcd03 --name=lv_etcd --label="etcd" --size=1024
 
-
 eula --agreed
 reboot
 
