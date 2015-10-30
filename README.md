@@ -25,7 +25,9 @@ Build RHEL7A from DVD (manually) and register to RHN.
   - update DNS using 'ipa' command found in finish script
  - Build RH6RHEVMGR
  - Build RHEL7D and create iSCSI targets
- - Build RHEL7B/7C and use RH6RHEVMGR to make them RHEV Hypervisors and attach them to RHEL7D for Storage
+ - Build RHEL7B/7C with RHEL7
+  - Attach RHEL7B and 7C to RH6RHEVMGR to make them RHEV Hypervisors 
+  - point RHEV Manager at RHEL7D for Storage
 
 ## NOTES
 In general, I create:
