@@ -123,6 +123,10 @@ hammer repository create --name='EPEL 7 - x86_64' --organization='MATRIXLABS' --
 
 for i in $(hammer --csv repository list --organization='MATRIXLABS' | awk -F, {'print $1'} | grep -vi '^ID'); do echo "hammer repository synchronize --id ${i} --organization='MATRIXLABS' --async"; done
 
+# Add the oSCAP functionality
+yum install ruby193-rubygem-foreman_openscap
+service foreman restart
+
 exit 0
 https://rh7sat6.matrix.private/foreman_tasks/tasks?search=state+=+paused
 https://rh7sat6.matrix.private/foreman_tasks/tasks?search=state+=+planned
