@@ -1,3 +1,11 @@
+So, a bit of this was quite iterative - i.e. I had to do something, get the result, plug that in to a config file, do something else... etc..
+
+# Create an AD User in your Domain 
+"oseconnector@matrix.lab" == CN="OSE Connector",CN=Users,DC=matrix,DC=lab
+
+# Now, this *may* be different depending on what version of Windows Server you have and whether the UNIX extensions have been loaded.  In my case, it's a Vanilla 2008r2 install without the UNIX schema
+
+#  Basic LDAP query
 ldapsearch \
  -x -h ms2k8ad.matrix.lab \
  -D "oseconnector@matrix.lab" \
@@ -7,18 +15,18 @@ ldapsearch \
 
 curl ldap://ms2k8ad.matrix.lab:389/cn="James Radtke",cn=Users,dc=matrix,dc=lab -u "oseconnector@matrix.lab:Passw0rd"
 
-ldapsearch \
- -x -h ms2k8ad.matrix.lab \
- -D "CN=OSE Connector,CN=Users,DC=matrix,DC=lab" \
- -w "Passw0rd" \
- -b "cn=users,dc=matrix,dc=lab" \
- -s sub "(cn=OSE Connector)"
-
 # For IDM
 ldapsearch -x -h rh7idm01.matrix.lab -D "CN=directory manager" -w "Passw0rd" -b "dc=matrix,dc=lab" -s sub "(cn=*)"
 
-exit 0
+# LDAP query to figure out what CN we will use for our query (which gets added to /etc/openshift/master/master-config.yaml)
+[root@rh7osemst01 ~]# ldapsearch  -x -h ms2k8ad.matrix.lab  -D "CN=OSE Connector,CN=Users,DC=matrix,DC=lab"  -w "Passw0rd"  -b "cn=users,dc=matrix,dc=lab"  -s sub "(cn=OSE Connector)" | grep oseconnect
+sAMAccountName: oseconnector
+userPrincipalName: oseconnector@matrix.lab
 
+# Note that sAMAccountName is the field that returns the username, which is what I will use to login using the oc command.
+
+
+# subset of /etc/openshift/master/master-config.yaml
 # INSECURE
   identityProviders:
   - name: "matrix_insecure"
