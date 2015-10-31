@@ -18,9 +18,6 @@ for ITEM in sa; do echo "## $ITEM"; oc get $ITEM; done
 oadm registry --config=/etc/openshift/master/admin.kubeconfig \
     --credentials=/etc/openshift/master/openshift-registry.kubeconfig \
     --images='registry.access.redhat.com/openshift3/ose-${component}:${version}'
-#oadm registry --config=/etc/openshift/master/admin.kubeconfig \
-#    --credentials=/etc/openshift/master/openshift-registry.kubeconfig \
-#    --images='rh7sat6.aperture.lab/openshift3/ose-${component}:${version}'
 
 ######################### ######################### #########################
 # Router
@@ -261,13 +258,14 @@ oadm new-project ${MYPROJ} --display-name="Hello Source2Image" \
 oc policy add-role-to-user admin 'CN=OSE User,CN=Users,DC=matrix,DC=lab' -n hello-s2i
 
 su - oseuser
-oc login -u oseuser --insecure-skip-tls-verify --server=https://rh7osemst01.matrix.lab:8443
+oc login -u oseuser -p Passw0rd --insecure-skip-tls-verify --server=https://rh7osemst01.matrix.lab:8443
 MYPROJ='hello-s2i'
 mkdir -p ~/Projects/${MYPROJ}; cd $_
 oc project ${MYPROJ} 
 oc new-app https://github.com/openshift/simple-openshift-sinatra-STI.git -o json | tee ./simple-sinatra.json
 oc create -f ./simple-sinatra.json -n ${MYPROJ}
 oc build-logs `oc get builds | grep sinatra | awk '{ print $1 }'`
+
 curl http://`oc get services | grep sinatra | awk '{ print $2":"$4 }' | cut -f1 -d\/`
 
 oc expose service simple-openshift-sinatra \
