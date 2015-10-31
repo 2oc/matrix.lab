@@ -38,8 +38,9 @@ do
 done
 
 # CONFIGURE REPO(S) 
-for HOST in `cat hosts`; do  
-ssh $HOST bash -c "' subscription-manager repos --disable=*; subscription-manager repos --enable rhel-7-server-rpms --enable rhel-7-server-optional-rpms --enable rhel-7-server-extras-rpms --enable rhel-7-server-ose-3.0-rpms 
+for HOST in `cat hosts` 
+do  
+  ssh $HOST bash -c "' subscription-manager repos --disable=*; subscription-manager repos --enable rhel-7-server-rpms --enable rhel-7-server-optional-rpms --enable rhel-7-server-extras-rpms --enable rhel-7-server-ose-3.0-rpms 
 '"
 done
 
@@ -101,7 +102,7 @@ cd
 git clone https://github.com/openshift/openshift-ansible
 cd openshift-ansible
 mv /etc/ansible/hosts /etc/ansible/hosts.orig
-MASTERS=`grep rh7osemst hosts`
+MASTERS=`grep rh7osemst ~/hosts`
 case $HAMSTR in
   0|no)
     echo "# NOTE:  Building OSE using a single master"
@@ -135,7 +136,7 @@ rm ~/.ssh/config && mv ~/.ssh/config-`date +%F` ~/.ssh/config
 # Configure Authentication (HTPASS) 
 useradd oseuser
 echo Passw0rd | passwd --stdin oseuser
-echo "echo \"oc login -u \`whoami\` --insecure-skip-tls-verify --server=https://rh7osemst01.${DOMAIN}:8443\" " >> ~oseuser/.bashrc
+echo "echo \"oc login -u \`whoami\` -p 'Passw0rd' --insecure-skip-tls-verify --server=https://rh7osemst01.${DOMAIN}:8443\" " >> ~oseuser/.bashrc
 
 cp /etc/openshift/master/master-config.yaml /etc/openshift/master/.master-config.yaml.orig
 sed -i -e 's/name: deny_all/name: htpasswd_auth/g' /etc/openshift/master/master-config.yaml
