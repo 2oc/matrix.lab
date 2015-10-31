@@ -2,11 +2,11 @@
 
 ## OVERVIEW
 | Hostname  | Purpose | Size |
-| :------------ |:---------------:| -----:|
-| RHEL7A        | KVM Host        | i5-3570K, 16GB
-| RHEL7B        | RHEV Hypervisor | G620, 16GB
-| RHEL7C        | RHEV Hypervisor | G620, 16GB
-| RHEL7D        | NAS Host        | i5-4250U, 16GB
+| :----- |:---------------:| --------------:|
+| RHEL7A | KVM Host        | i5-3570K, 16GB
+| RHEL7B | RHEV Hypervisor | G620, 16GB
+| RHEL7C | RHEV Hypervisor | G620, 16GB
+| RHEL7D | NAS Host        | i5-4250U, 16GB
 
 RHEL7A hosts the following KVM Guests
 *  Satellite 6 (rh7sat6)
