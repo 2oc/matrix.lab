@@ -20,10 +20,15 @@ CREDS="admin@internal:Passw0rd"
 HEADER1="Content-type: application/xml"
 HEADER2="Accept: application/xml"
 
+
 if [ ! -f ${RHEVCRT} ]
 then
   curl -o ${RHEVCRT} http://${RHEVMGR}:80/ca.crt
 fi
+
+usage() {
+  echo "${0} [delete|create|shutdown|start|list]"
+}
 
 list() {
 # RETRIEVE VMS (INFORMATIONAL) 
@@ -150,6 +155,7 @@ case $1 in
   ;;
   *)
     echo "# ERROR: unknown option $1 "
+    usage
     exit 9
 esac
   
