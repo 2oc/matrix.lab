@@ -18,12 +18,12 @@ RHEL7B/C are both RHEV Hypervisors (from RHEL 7)
 RHEL7D is a Intel NUC with 2 x SSD installed which basically serves as a NAS (NFS and iSCSI)
 
 ## Build Steps
-Build RHEL7A from DVD (manually) and register to RHN.
- - populate entire list of KVM guests in /etc/hosts
- - Build RH7SAT6 and register to RHN
- - Build RH7IDM01/02 and register to RH7SAT6
-  - update DNS using 'ipa' command found in finish script
- - Build RH6RHEVMGR
+ - Build RHEL7A from DVD (manually) and register to RHN.
+  - populate entire list of KVM guests in /etc/hosts
+  - Build RH7SAT6 and register to RHN
+  - Build RH7IDM01/02 and register to RH7SAT6
+   - update DNS using 'ipa' command found in finish script
+  - Build RH6RHEVMGR
  - Build RHEL7D and create iSCSI targets
  - Build RHEL7B/7C with RHEL7
   - Attach RHEL7B and 7C to RH6RHEVMGR to make them RHEV Hypervisors 
