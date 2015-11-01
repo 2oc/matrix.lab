@@ -1,7 +1,7 @@
 # matrix.lab
 
 ## OVERVIEW
-| Hostname  | Purpose | Size |
+| Hostname  | Purpose | Proc, Mem Size |
 | :----- |:---------------:| --------------:|
 | RHEL7A | KVM Host        | i5-3570K, 16GB
 | RHEL7B | RHEV Hypervisor | G620, 16GB
@@ -36,7 +36,6 @@ In general, I create:
  - ./post_install.sh a script that *should* end up in /root post kickstart.  This script registers node to Satellite and
     performs some housekeeping.
  - finish_\<HOSTNAME\>.sh which should contain all the post-build steps
-
 
 ```
 # echo "RH7IDM01:EL7:2:2048:20:0" >> .config
