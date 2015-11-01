@@ -40,6 +40,7 @@ done
 # CONFIGURE REPO(S) 
 for HOST in `cat hosts` 
 do  
+  echo "Configuring: $HOST"
   ssh $HOST bash -c "' subscription-manager repos --disable=*; subscription-manager repos --enable rhel-7-server-rpms --enable rhel-7-server-optional-rpms --enable rhel-7-server-extras-rpms --enable rhel-7-server-ose-3.0-rpms 
 '"
 done
@@ -47,6 +48,7 @@ done
 # THIS SHOULD ONLY RUN ON THE MASTER
 yum -y install wget git net-tools bind-utils iptables-services bridge-utils python-virtualenv gcc
 yum -y install docker 
+#  DOUBLE-CHECK THE RESULTS OF THIS COMMAND....
 sed -i -e "s/OPTIONS='--selinux-enabled'/OPTIONS='--selinux-enabled --insecure-registry 172.30.0.0\/16'/" /etc/sysconfig/docker
 yum -y install http://mirror.sfo12.us.leaseweb.net/epel/7/x86_64/e/epel-release-7-5.noarch.rpm
 yum -y install ansible 
@@ -111,10 +113,15 @@ case $HAMSTR in
   *)
     echo "# NOTE:  Building OSE using multiple master"
     wget ${WEBREPO}/OSE/ose-multi_master-multi_etcd.txt -O /etc/ansible/hosts
-    for HOST in `grep -i rh7osemst hosts`; do ssh $HOST "subscription-manager repos --enable=rhel-ha-for-rhel-7-server-rpms"; done
+    for HOST in `grep -i rh7osemst ~/hosts`; do ssh $HOST "subscription-manager repos --enable=rhel-ha-for-rhel-7-server-rpms"; done
   ;;
 esac 
-cd; ansible-playbook ~/openshift-ansible/playbooks/byo/config.yml
+cat << EOF > ./.ansible.cfg
+[defaults] 
+log_path=./installation.log
+EOF
+# See if this works (instead of cd ~; )
+ansible-playbook ~/openshift-ansible/playbooks/byo/config.yml
 
 # I believe this is not necessary...
 case $HAMSTR in
@@ -131,7 +138,7 @@ esac
   ;;
 esac
 # rm config and put the original ssh config back (if there was one)
-rm ~/.ssh/config && mv ~/.ssh/config-`date +%F` ~/.ssh/config 
+rm -f ~/.ssh/config && mv ~/.ssh/config-`date +%F` ~/.ssh/config 
 
 # Configure Authentication (HTPASS) 
 useradd oseuser
