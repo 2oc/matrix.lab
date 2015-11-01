@@ -1,7 +1,9 @@
 ################################################################################
-for ITEM in rc nodes pods services dc bc; do echo "## $ITEM"; oc get $ITEM; echo; done
+for ITEM in nodes pods services ; do echo "## $ITEM"; oc get $ITEM; echo; done
+for ITEM in rc dc bc; do echo "## $ITEM"; oc get $ITEM; echo; done
 for ITEM in projects templates; do echo "## $ITEM"; oc get $ITEM; done
 for ITEM in sa; do echo "## $ITEM"; oc get $ITEM; done
+for ITEM in pv pvc; do echo "## $ITEM"; oc get $ITEM; done
 
 # for i in buildconfig deploymentconfig service; do echo $i; oc get $i; echo -e "\n\n"; done
 # oc get all
@@ -11,16 +13,67 @@ for ITEM in sa; do echo "## $ITEM"; oc get $ITEM; done
 # oc get nodes
 # oc logs docker-registry-1-deploy
 
-######################### ######################### ######################### 
-# Registry 
-######################### ######################### ######################### 
+##########################
+# Declare PVs/PVCs on Master for Registry
+##########################
+mkdir -p ~/Projects/default; cd $_
+cat << EOF > registry-volume.json
+    {
+      "apiVersion": "v1",
+      "kind": "PersistentVolume",
+      "metadata": {
+        "name": "registry-storage"
+      },
+      "spec": {
+        "capacity": {
+            "storage": "1Gi"
+            },
+        "accessModes": [ "ReadWriteMany" ],
+        "nfs": {
+            "path": "/export/nfs/pvs/registryvol",
+            "server": "rhel7d.matrix.lab"
+        }
+      }
+    }
+
+EOF
+oc create -f registry-volume.json -n default
+cat << EOF > registry-volume-claim.json
+    {
+      "apiVersion": "v1",
+      "kind": "PersistentVolumeClaim",
+      "metadata": {
+        "name": "registry-claim"
+      },
+      "spec": {
+        "accessModes": [ "ReadWriteMany" ],
+        "resources": {
+          "requests": {
+            "storage": "1Gi"
+          }
+        }
+      }
+    }
+
+EOF
+oc create -f registry-volume-claim.json -n default
+oc get pvc
+
+######################### ######################### #########################
+# Registry
+######################### ######################### #########################
 # REGISTRY(S)
-oadm registry --config=/etc/openshift/master/admin.kubeconfig \
+oadm registry --create \
+    --config=/etc/openshift/master/admin.kubeconfig \
     --credentials=/etc/openshift/master/openshift-registry.kubeconfig \
     --images='registry.access.redhat.com/openshift3/ose-${component}:${version}'
 
+oc volume dc/docker-registry --add --overwrite -t persistentVolumeClaim \
+  --claim-name=registry-claim --name=registryvol
+
 ######################### ######################### #########################
 # Router
+#  NOTE:  You need a registry before you can create the router
 ######################### ######################### #########################
 oadm router harouter --stats-password='Passw0rd' --replicas=2 \
   --config=/etc/openshift/master/admin.kubeconfig  \
@@ -28,18 +81,11 @@ oadm router harouter --stats-password='Passw0rd' --replicas=2 \
   --images='registry.access.redhat.com/openshift3/ose-haproxy-router:v3.0.0.1' \
   --selector='region=infra' --service-account=router
 
-######################### ######################### #########################
-# SERVICES
-######################### ######################### #########################
-oadm new-project svcslab --display-name="Services Lab" \
-    --description="This is the project we use to learn about services" \
-    --admin=oseuser --node-selector='region=primary'
-
 ##########################
 # Declare PVs/PVCs on Master for *whatever*
 ##########################
 mkdir /root/pvs
-export volsize="1Gi"
+export volsize="3Gi"
 for volume in pv{1..10} ; do
 cat << EOF > /root/pvs/${volume}
 {
@@ -65,53 +111,13 @@ echo "Created def file for ${volume}";
 done
 cd /root/pvs
 cat pv{1..2} | oc create -f - -n default
-cat pv{3..5} | oc create -f - -n test
 
-##########################
-# Declare PVs/PVCs on Master for Registry
-##########################
-cat << EOF > registry-volume.json
-    {
-      "apiVersion": "v1",
-      "kind": "PersistentVolume",
-      "metadata": {
-        "name": "registry-storage"
-      },
-      "spec": {
-        "capacity": {
-            "storage": "15Gi"
-            },
-        "accessModes": [ "ReadWriteMany" ],
-        "nfs": {
-            "path": "/export/nfs/pvs/registryvol",
-            "server": "rhel7d.matrix.lab"
-        }
-      }
-    }
-
-EOF
-oc create -f registry-volume.json -n default
-cat << EOF > registry-volume-claim.json
-    {
-      "apiVersion": "v1",
-      "kind": "PersistentVolumeClaim",
-      "metadata": {
-        "name": "registry-claim"
-      },
-      "spec": {
-        "accessModes": [ "ReadWriteMany" ],
-        "resources": {
-          "requests": {
-            "storage": "3Gi"
-          }
-        }
-      }
-    }
-
-EOF
-oc create -f registry-volume-claim.json -n default
-oc volume dc/docker-registry --add --overwrite -t persistentVolumeClaim \
-  --claim-name=registry-claim --name=registryvol
+######################### ######################### #########################
+# SERVICES
+######################### ######################### #########################
+oadm new-project svcslab --display-name="Services Lab" \
+    --description="This is the project we use to learn about services" \
+    --admin=oseuser --node-selector='region=primary'
 
 ######################### ######################### ######################### 
 # PROJECTS
@@ -192,7 +198,7 @@ oc describe quota test-quota -n resourcemanagement
 oc describe limitranges limits -n resourcemanagement
 
 su - oseuser 
-oc login -u oseuser --insecure-skip-tls-verify --server=https://rh7osemst01.aperture.lab:8443
+oc login -u oseuser --insecure-skip-tls-verify --server=https://rh7osemst01.matrix.lab:8443
 oc project resourcemanagement
 mkdir -p ~/proeject/resourcemanagement/; cd $_
 
