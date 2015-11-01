@@ -46,3 +46,29 @@ In general, I create:
 # chmod u+x finish_RH7IDM01.sh
 # ./finish_RH7IDM01.sh
 ```
+
+## OSEv3
+The primary function of my lab (at this time) is to have an OpenShift Enterprise v3 environment.
+
+| Hostname  | Product      |  Purpose | Proc, Mem Size |
+| :----- |:---------------:|:---------------:| --------------:|
+| RH7SAT6 | Red Hat Satellite 6 | Package Repo | 2, 4096m 
+| RH7IDM01 | Red Hat Identity Management | IdM and DNS | 2, 1024m
+| RH7IDM02 | Red Hat Identity Management | IdM and DNS | 2, 1024m
+| RH7OSEMST01 | Red Hat OSEv3 | Master Node | 2, 1024m
+| RH7OSEMST02 | Red Hat OSEv3 | Master Node | 2, 1024m (Optional Node)
+| RH7OSEINF01 | Red Hat OSEv3 | Infrastructure Node | 2, 1024m
+| RH7OSEINF02 | Red Hat OSEv3 | Infrastructure Node | 2, 1024m
+| RH7OSETCD01 | Red Hat OSEv3 | ETCD Node | 2, 1024m
+| RH7OSETCD02 | Red Hat OSEv3 | ETCD Node | 2, 1024m
+| RH7OSETCD03 | Red Hat OSEv3 | ETCD Node | 2, 1024m
+| RH7OSENOD01 | Red Hat OSEv3 | Container Node | 2, 1024m
+| RH7OSENOD02 | Red Hat OSEv3 | Container Node | 2, 1024m
+
+
+| Node Type | Description |
+| :------------- |:---------------:|
+| Master | Manages OSE Cluster, Hosts API, endpoint for Nodes to "check-in" for work
+| Infrastructure | Nodes which will host container such as the registry and routers 
+| ETCD | ETCD Nodes provide the clustered OSE object key-pair store
+| Container | Container nodes will provide Docker for hosting your containers
