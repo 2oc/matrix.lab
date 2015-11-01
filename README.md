@@ -52,9 +52,10 @@ The primary function of my lab (at this time) is to have an OpenShift Enterprise
 
 | Hostname  | Product      |  Purpose | Proc, Mem Size |
 | :----- |:---------------:|:---------------:| --------------:|
-| RH7SAT6 | Red Hat Satellite 6 | Package Repo | 2, 4096m 
+| RH7SAT6 | Red Hat Satellite 6 | Host Management | 2, 4096m 
 | RH7IDM01 | Red Hat Identity Management | IdM and DNS | 2, 1024m
 | RH7IDM02 | Red Hat Identity Management | IdM and DNS | 2, 1024m
+| -------- | --------------------------- | ----------- | --------
 | RH7OSEMST01 | Red Hat OSEv3 | Master Node | 2, 1024m
 | RH7OSEMST02 | Red Hat OSEv3 | Master Node | 2, 1024m (Optional Node)
 | RH7OSEINF01 | Red Hat OSEv3 | Infrastructure Node | 2, 1024m
