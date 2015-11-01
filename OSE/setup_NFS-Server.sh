@@ -19,10 +19,11 @@ do
   echo "/export/nfs/pvs/${VOLUME} 10.10.10.0/24(rw,sync,all_squash)" >> /etc/exports
 done
 mount -a
+# https://docs.openshift.com/enterprise/3.0/admin_guide/persistent_storage_nfs.html
 for VOLUME in pv{1..10}
 do
   chown nfsnobody:nfsnobody /export/nfs/pvs/${VOLUME}
-  chmod 700  /export/nfs/pvs/${VOLUME}
+  chmod 777  /export/nfs/pvs/${VOLUME}
 done
 systemctl restart nfs
 exportfs -a
@@ -37,6 +38,6 @@ echo "/dev/mapper/${VG}-lv_${VOLUME} /export/nfs/pvs/${VOLUME} xfs defaults 0 0"
 echo "/export/nfs/pvs/${VOLUME} *(rw,sync,all_squash)" >> /etc/exports
 mount /export/nfs/pvs/${VOLUME}
 chown nfsnobody:nfsnobody /export/nfs/pvs/${VOLUME}
-chmod 700  /export/nfs/pvs/${VOLUME}
+chmod 777  /export/nfs/pvs/${VOLUME}
 systemctl restart nfs
 
