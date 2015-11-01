@@ -1,0 +1,64 @@
+
+### Host-based firewall ports
+ok: [rh7osemst01.example.com] => (item={'port': '4001/tcp', 'service': 'etcd embedded'})
+ok: [rh7osemst01.example.com] => (item={'port': '8443/tcp', 'service': 'api server https'})
+ok: [rh7osemst01.example.com] => (item={'port': '53/tcp', 'service': 'dns tcp'})
+ok: [rh7osemst01.example.com] => (item={'port': '53/udp', 'service': 'dns udp'})
+ok: [rh7osemst01.example.com] => (item={'port': '24224/tcp', 'service': 'Fluentd td-agent tcp'})
+ok: [rh7osemst01.example.com] => (item={'port': '24224/udp', 'service': 'Fluentd td-agent udp'})
+ok: [rh7osemst01.example.com] => (item={'port': '2224/tcp', 'service': 'pcsd'})
+ok: [rh7osemst01.example.com] => (item={'port': '5404/udp', 'service': 'Corosync UDP'})
+ok: [rh7osemst01.example.com] => (item={'port': '5405/udp', 'service': 'Corosync UDP'})
+
+TASK: [os_firewall | Remove iptables rules] *********************************** 
+ok: [rh7osemst01.example.com] => (item={'port': '8080/tcp', 'service': 'api server http'})
+ok: [rh7osemst01.example.com] => (item={'port': '8444/tcp', 'service': 'former web console port'})
+ok: [rh7osemst01.example.com] => (item={'port': '7001/tcp', 'service': 'former etcd peer port'})
+
+
+| Port | Protocol | Source-to-Dest | Description |
+| :--- |:--------:|:--------------------- |:-----------:|
+| 4789 | UDP      | Node-to-Node          | required between nodes for SDN communication between pods on separate hosts
+| ---- | -------- | --------------------- |
+| 53   | TCP/UDP  | Nodes-to-Master       | On openshift master server. Which provides DNS services within the environment
+| 4789 | UDP      | Nodes-to-Master       | required between nodes for SDN communication between pods on separate hosts
+| ---- | -------- | --------------------- |
+| 53   | TCP/UDP  | Master-to-Master      | On openshift master server. Which provides DNS services within the environment
+| 4789 | UDP      | Master-to-Master      | required between nodes for SDN communication between pods on separate hosts
+| 4001 | TCP/UDP  | Master-to-Master      | Master: ETCD. accepts changes in state
+| 7001 | TCP      | Master-to-Master      | Etcd requires 7001 between masters as well, which is used for leader election and peering connections.
+| ---- | -------- | --------------------- |
+| 8443 | TCP      | External-to-Master(s) | To allow API updates via cli, GUI or REST
+
+
+changed: [rh7osemst01.matrix.lab] => (item={'port': '10250/tcp', 'service': 'Kubernetes kubelet'})
+changed: [rh7oseinf01.matrix.lab] => (item={'port': '10250/tcp', 'service': 'Kubernetes kubelet'})
+changed: [rh7osenod01.matrix.lab] => (item={'port': '10250/tcp', 'service': 'Kubernetes kubelet'})
+changed: [rh7osenod02.matrix.lab] => (item={'port': '10250/tcp', 'service': 'Kubernetes kubelet'})
+changed: [rh7oseinf02.matrix.lab] => (item={'port': '10250/tcp', 'service': 'Kubernetes kubelet'})
+changed: [rh7osemst01.matrix.lab] => (item={'port': '80/tcp', 'service': 'http'})
+changed: [rh7oseinf01.matrix.lab] => (item={'port': '80/tcp', 'service': 'http'})
+changed: [rh7osenod01.matrix.lab] => (item={'port': '80/tcp', 'service': 'http'})
+changed: [rh7oseinf02.matrix.lab] => (item={'port': '80/tcp', 'service': 'http'})
+changed: [rh7osemst01.matrix.lab] => (item={'port': '443/tcp', 'service': 'https'})
+changed: [rh7osenod02.matrix.lab] => (item={'port': '80/tcp', 'service': 'http'})
+changed: [rh7oseinf01.matrix.lab] => (item={'port': '443/tcp', 'service': 'https'})
+changed: [rh7osenod01.matrix.lab] => (item={'port': '443/tcp', 'service': 'https'})
+changed: [rh7oseinf02.matrix.lab] => (item={'port': '443/tcp', 'service': 'https'})
+changed: [rh7osenod01.matrix.lab] => (item={'port': '10255/tcp', 'service': 'Openshift kubelet ReadOnlyPort'})
+changed: [rh7oseinf01.matrix.lab] => (item={'port': '10255/tcp', 'service': 'Openshift kubelet ReadOnlyPort'})
+changed: [rh7osenod02.matrix.lab] => (item={'port': '443/tcp', 'service': 'https'})
+changed: [rh7osemst01.matrix.lab] => (item={'port': '10255/tcp', 'service': 'Openshift kubelet ReadOnlyPort'})
+changed: [rh7osenod01.matrix.lab] => (item={'port': '10255/udp', 'service': 'Openshift kubelet ReadOnlyPort udp'})
+changed: [rh7oseinf01.matrix.lab] => (item={'port': '10255/udp', 'service': 'Openshift kubelet ReadOnlyPort udp'})
+changed: [rh7oseinf02.matrix.lab] => (item={'port': '10255/tcp', 'service': 'Openshift kubelet ReadOnlyPort'})
+changed: [rh7osenod02.matrix.lab] => (item={'port': '10255/tcp', 'service': 'Openshift kubelet ReadOnlyPort'})
+changed: [rh7osemst01.matrix.lab] => (item={'port': '10255/udp', 'service': 'Openshift kubelet ReadOnlyPort udp'})
+changed: [rh7osenod01.matrix.lab] => (item={'when': 'openshift.node.use_openshift_sdn | bool', 'port': '4789/udp', 'service': 'OpenShift OVS sdn'})
+changed: [rh7oseinf01.matrix.lab] => (item={'when': 'openshift.node.use_openshift_sdn | bool', 'port': '4789/udp', 'service': 'OpenShift OVS sdn'})
+changed: [rh7oseinf02.matrix.lab] => (item={'port': '10255/udp', 'service': 'Openshift kubelet ReadOnlyPort udp'})
+changed: [rh7osenod02.matrix.lab] => (item={'port': '10255/udp', 'service': 'Openshift kubelet ReadOnlyPort udp'})
+changed: [rh7oseinf02.matrix.lab] => (item={'when': 'openshift.node.use_openshift_sdn | bool', 'port': '4789/udp', 'service': 'OpenShift OVS sdn'})
+changed: [rh7osemst01.matrix.lab] => (item={'when': 'openshift.node.use_openshift_sdn | bool', 'port': '4789/udp', 'service': 'OpenShift OVS sdn'})
+changed: [rh7osenod02.matrix.lab] => (item={'when': 'openshift.node.use_openshift_sdn | bool', 'port': '4789/udp', 'service': 'OpenShift OVS sdn'})
+
