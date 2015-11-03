@@ -169,6 +169,7 @@ kinit admin
 ipa dnszone-add cloudapps.matrix.lab --admin-email=root@matrix.lab --minimum=3000 --dynamic-update
 ipa dnsrecord-add cloudapps.matrix.lab '*' --a-rec 10.10.10.135
 ipa dnsrecord-add cloudapps.matrix.lab '*' --a-rec 10.10.10.136
+ipa dnszone-mod --allow-transfer='10.10.10.0/24' cloudapps.matrix.lab
 }
 
 
