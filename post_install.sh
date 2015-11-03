@@ -1,9 +1,23 @@
 #!/bin/bash
 
 #  USER-CONFIGURABLE STUFF HERE....
-DOMAIN="matrix.lab"
-ORGANIZATION="MATRIXLABS"
 SATELLITE="rh7sat6"
+
+# Determine which lab environment we're in...
+DOMAIN=`hostname -d`
+case $DOMAIN in
+  'matrix.lab')
+    ORGANIZATION="MATRIXLABS"
+  ;;
+  'aperture.lab')
+    ORGANIZATION="APERTURELABS"
+  ;;
+  *)
+    echo "ERROR: domain not recognized..."
+    echo "[can|should] not proceed"
+    exit 9
+  ;;
+esac
 
 # NOTE:  need to update this to allow it to be run numerous times (i.e. check whether a condition exists, then update if neccessary)
 
