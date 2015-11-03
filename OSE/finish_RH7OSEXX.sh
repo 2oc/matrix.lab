@@ -9,9 +9,22 @@
 ###   NOTE  !!!! NOTE  !!!!!
 #   This is not intended to simply be run on a single node... it's still in a form where pieces 
 #     need to be selectively applied (i.e. some steps are run on the master, other on the nodes, other on both...)
-DOMAIN=matrix.lab; WEBREPO=10.10.10.10
-#DOMAIN=aperture.lab; WEBREPO=192.168.122.1
 HAMSTR=0
+
+DOMAIN=`hostname -d`
+case $DOMAIN in
+  'matrix.lab')
+    WEBREPO=10.10.10.10
+  ;;
+  'aperture.lab')
+    WEBREPO=192.168.122.1
+  ;;
+  *)
+    echo "ERROR: Domain not recognized foo..."
+    echo "   [can|should] not proceed."
+    exit 9
+  ;;
+esac
 
 cat << EOF > hosts
 rh7osemst01.${DOMAIN}
