@@ -3,7 +3,7 @@
 auth --enableshadow --passalgo=sha512
 
 # Use network installation
-#url --url="http://10.10.10.4/CentOS-7.1-x86_64/"
+#url --url="http://10.10.10.4/RHEL-7.1-x86_64/"
 # Run the Setup Agent on first boot
 #firstboot --enable
 # Keyboard layouts

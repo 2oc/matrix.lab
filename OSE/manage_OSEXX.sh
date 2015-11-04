@@ -112,6 +112,33 @@ done
 cd /root/pvs
 cat pv{1..2} | oc create -f - -n default
 
+######################
+# PROJECT (S2I Build)
+######################
+# On Master
+#  Simple Sinatra using source
+MYPROJ='hello-s2i'
+oadm new-project ${MYPROJ} --display-name="Hello Source2Image" \
+    --description="This project is for Source to Image builds" \
+      --node-selector='region=primary' --admin=oseuser
+# Since I have now "plumbed my ENV to AD"....
+oc policy add-role-to-user admin 'CN=OSE User,CN=Users,DC=matrix,DC=lab' -n hello-s2i
+
+su - oseuser
+oc login -u oseuser -p Passw0rd --insecure-skip-tls-verify --server=https://rh7osemst01.matrix.lab:8443
+MYPROJ='hello-s2i'
+mkdir -p ~/Projects/${MYPROJ}; cd $_
+oc project ${MYPROJ}
+oc new-app https://github.com/openshift/simple-openshift-sinatra-STI.git -o json | tee ./simple-sinatra.json
+oc create -f ./simple-sinatra.json -n ${MYPROJ}
+oc build-logs `oc get builds | grep sinatra | awk '{ print $1 }'`
+
+curl http://`oc get services | grep sinatra | awk '{ print $2":"$4 }' | cut -f1 -d\/`
+
+oc expose service simple-openshift-sinatra \
+  --hostname=mysinatra.cloudapps.matrix.lab
+# oc edit route
+
 ######################### ######################### #########################
 # SERVICES
 ######################### ######################### #########################
@@ -120,7 +147,7 @@ oadm new-project svcslab --display-name="Services Lab" \
     --admin=oseuser --node-selector='region=primary'
 
 ######################### ######################### ######################### 
-# PROJECTS
+# PROJECT RESOURCE MANAGEMENT
 ######################### ######################### ######################### 
 oadm new-project resourcemanagement --display-name="Resources Management" \
     --description="resource management project" \
@@ -330,7 +357,6 @@ curl `oc get services | grep petstore | awk '{ print $2":"$4 }' | cut -f1 -d\/`
 oc expose service petstore --hostname=petstore.cloudapps.matrix.lab
 oc exec -it -p petstore-1-build /bin/bash # This doesn't work since it is a privileged container, or something...
 
-
 ######################
 # Registry (Securing)
 ######################
@@ -349,7 +375,6 @@ oc env dc/docker-registry \
     REGISTRY_HTTP_TLS_KEY=/etc/secrets/registry.key
 POD=`oc get pods | grep ^docker-registry | awk '{ print $1 }'`
 oc -it -p $POD exec ls /etc/secrets # this doesn't work for some reason....
-
 
 ######################
 # GIT Quicky
