@@ -23,7 +23,7 @@ esac
 
    subscription-manager clean
     yum -y localinstall http://${SATELLITE}.${DOMAIN}/pub/katello-ca-consumer-latest.noarch.rpm
-    subscription-manager register --org="${ORGANIZATION}" --environment="Library" --username='admin' --password='Passw0rd' --release=7.1 --auto-attach --force
+    subscription-manager register --org="${ORGANIZATION}" --environment="Library" --username='admin' --password='Passw0rd' --release=7Server --auto-attach --force
     subscription-manager repos --enable rhel-7-server-rpms --enable rhel-7-server-rh-common-rpms --enable rhel-7-server-satellite-tools-6.1-rpms
     yum -y install katello-agent
     katello-package-upload 
