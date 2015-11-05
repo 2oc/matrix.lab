@@ -23,8 +23,7 @@ ldapsearch -x -h rh7idm01.matrix.lab -D "CN=directory manager" -w "Passw0rd" -b 
 sAMAccountName: oseconnector
 userPrincipalName: oseconnector@matrix.lab
 
-# Note that sAMAccountName is the field that returns the username, which is what I will use to login using the oc command.
-
+# Note that sAMAccountName is the field that returns the username, which is what I will use to login using the oc command.  Look for the sAMAccountName in the url below...
 
 # subset of /etc/openshift/master/master-config.yaml
 # INSECURE
@@ -75,6 +74,9 @@ userPrincipalName: oseconnector@matrix.lab
 NAME                                        UID                                    FULL NAME      IDENTITIES
 CN=James Radtke,CN=Users,DC=matrix,DC=lab   fbd72db6-78f7-11e5-809d-001a4a604100   James Radtke   matrix_insecure:CN=James Radtke,CN=Users,DC=matrix,DC=lab
 CN=OSE User,CN=Users,DC=matrix,DC=lab       7bbf8e01-78f7-11e5-809d-001a4a604100   OSE User       matrix_insecure:CN=OSE User,CN=Users,DC=matrix,DC=lab
+
+# Or review...
+[root@rh7osemst01 ~]# oc get identities
 
 [root@rh7osemst01 ~]# su - oseuser
 [oseuser@rh7osemst01 ~]$ oc login -u oseuser -p 'Passw0rd' --insecure-skip-tls-verify --server=https://rh7osemst01.matrix.lab:8443
