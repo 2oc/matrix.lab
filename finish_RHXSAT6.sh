@@ -4,6 +4,8 @@ RHNUSER=""
 RHNPASSWD=""
 ORGANIZATION=""
 SATVERSION="6.1"
+SATNAME="rh7sat6"
+DOMAIN="matrix.lab"
 
 # Log the output of the script
 LOG="./${0}.log"
@@ -30,22 +32,28 @@ subscription-manager release --set=$RELEASE
 
 case $RELEASE in 
   7Server) 
-    # This is a kludge at the moment... 
-    #subscription-manager repos --enable rhel-7-server-rpms --enable rhel-server-rhscl-7-rpms 
-    #subscription-manager repos --enable rhel-7-server-rpms --enable rhel-server-rhscl-7-rpms --enable rhel-7-server-satellite-6.0-rpms --enable rhel-7-server-satellite-optional-6.0-rpms 
-    subscription-manager repos --enable rhel-7-server-rpms --enable rhel-server-rhscl-7-rpms --enable rhel-7-server-satellite-${SATVERSION}-rpms --enable rhel-7-server-satellite-optional-${SATVERSION}-rpms  
+    subscription-manager repos --disable=*; subscription-manager repos --enable rhel-7-server-rpms --enable rhel-server-rhscl-7-rpms --enable rhel-7-server-satellite-${SATVERSION}-rpms --enable rhel-7-server-satellite-optional-${SATVERSION}-rpms  
   ;;
   6Server)
     subscription-manager repos --enable rhel-6-server-rpms --enable rhel-server-rhscl-6-rpms --enable rhel-6-server-satellite-${SATVERSION}-rpms --enable rhel-6-server-satellite-optional-${SATVERSION}-rpms
-    chkconfig ntpd on && service ntpd start
   ;;
 esac
 
 yum -y install ntp
-systemctl disable chronyd && systemctl stop chronyd
+# Figure out how to make this dynamic
 sed -i -e 's/restrict ::1/restrict ::1\nrestrict 192.168.122.0 netmask 255.255.255.0 nomodify notrap/g' /etc/ntp.conf
-systemctl enable ntpd && systemctl start ntpd
 
+case $RELEASE in 
+  7Server) 
+    systemctl disable chronyd && systemctl stop chronyd
+    systemctl enable ntpd && systemctl start ntpd
+  ;;
+  6Server)
+    chkconfig ntpd on && service ntpd start
+  ;;
+esac
+
+# Firewall Ports required for Satellite functionality
 TCP_PORTS="80 123 443 5671 5674 8080 8140 9090" 
 UDP_PORTS="53 67 68 69 80 123 443 8080"
 SVCS="ntp"
@@ -106,10 +114,10 @@ cat << EOF > ~/.hammer/cli_config.yml
 
 :foreman:
     :enable_module: true
-    :host: 'https://rh7sat6.matrix.lab'
+    :host: 'https://${SATELLITE}.${DOMAIN}'
     :username: 'satadmin'
     :password: 'Passw0rd'
-    :organization: 'MATRIXLABS'
+    :organization: '${ORGANIZATION}'
 
     # Check API documentation cache status on each request
     #:refresh_cache: false
@@ -121,14 +129,14 @@ cat << EOF > ~/.hammer/cli_config.yml
 :log_level: 'error'
 EOF
 
-hammer product create --name='EPEL' --organization='MATRIXLABS'
-hammer repository create --name='EPEL 7 - x86_64' --organization='MATRIXLABS' --product='EPEL' --content-type='yum' --publish-via-http=true --url=http://dl.fedoraproject.org/pub/epel/7/x86_64/
+hammer product create --name='EPEL' --organization="${ORGANIZATION}"
+hammer repository create --name='EPEL 7 - x86_64' --organization="${ORGANIZATION}" --product='EPEL' --content-type='yum' --publish-via-http=true --url=http://dl.fedoraproject.org/pub/epel/7/x86_64/
 
-for i in $(hammer --csv repository list --organization='MATRIXLABS' | awk -F, {'print $1'} | grep -vi '^ID'); do echo "hammer repository synchronize --id ${i} --organization='MATRIXLABS' --async"; done
+for i in $(hammer --csv repository list --organization="${ORGANIZATION}" | awk -F, {'print $1'} | grep -vi '^ID'); do echo "hammer repository synchronize --id ${i} --organization="${ORGANIZATION}" --async"; done
 
 # Add the oSCAP functionality
 yum install ruby193-rubygem-foreman_openscap
-service foreman restart
+systemctl restart foreman 
 
 exit 0
 == Good to know links
@@ -137,7 +145,8 @@ https://rh7sat6.matrix.private/foreman_tasks/tasks?search=state+=+planned
 https://rh7sat6.matrix.private/foreman_tasks/tasks?search=result+=+pending
 
 == TODO
-make sure the entire process is scripted: register host, create Organization, import channels, create Lifecycle Env
-
-
-
+make sure the entire process is scripted: 
+  register host
+  create Organization
+  import channels
+  create Lifecycle Env
