@@ -1,11 +1,17 @@
 #!/bin/bash
 
+RHNUSER=""
+RHNPASSWD=""
+ORGANIZATION=""
+SATVERSION="6.1"
+
 # Log the output of the script
 LOG="./${0}.log"
 exec > ${LOG}
 exec 2>&1
 
 echo "NOTE: you may view the output by viewing - ${LOG}"
+rpm -qa tuned || yum -y install tuned
 tuned-adm profile virtual-guest
 systemctl enable tuned 
 
@@ -26,11 +32,11 @@ case $RELEASE in
   7Server) 
     # This is a kludge at the moment... 
     #subscription-manager repos --enable rhel-7-server-rpms --enable rhel-server-rhscl-7-rpms 
-    subscription-manager repos --enable rhel-7-server-rpms --enable rhel-server-rhscl-7-rpms --enable rhel-7-server-satellite-6.0-rpms --enable rhel-7-server-satellite-optional-6.0-rpms 
-    #subscription-manager repos --enable rhel-7-server-rpms --enable rhel-7-server-satellite-6.1-rpms --enable rhel-7-server-satellite-optional-6.1-rpms --enable rhel-server-rhscl-7-rpms 
+    #subscription-manager repos --enable rhel-7-server-rpms --enable rhel-server-rhscl-7-rpms --enable rhel-7-server-satellite-6.0-rpms --enable rhel-7-server-satellite-optional-6.0-rpms 
+    subscription-manager repos --enable rhel-7-server-rpms --enable rhel-server-rhscl-7-rpms --enable rhel-7-server-satellite-${SATVERSION}-rpms --enable rhel-7-server-satellite-optional-${SATVERSION}-rpms  
   ;;
   6Server)
-    subscription-manager repos --enable rhel-6-server-rpms --enable rhel-6-server-satellite-6.0-rpms --enable rhel-6-server-satellite-optional-6.0-rpms --enable rhel-server-rhscl-6-rpms 
+    subscription-manager repos --enable rhel-6-server-rpms --enable rhel-server-rhscl-6-rpms --enable rhel-6-server-satellite-${SATVERSION}-rpms --enable rhel-6-server-satellite-optional-${SATVERSION}-rpms
     chkconfig ntpd on && service ntpd start
   ;;
 esac
@@ -60,6 +66,7 @@ case $RELEASE in
       /bin/firewall-cmd --permanent --zone=$DEFAULT_ZONE --add-port=${PORT}/udp
     done
 
+    # The following is part of the Installation Doc (not exactly certain what they are for)
     for USER in foreman katello root
     do 
       firewall-cmd --permanent --direct --add-rule ipv4 filter OUTPUT 0 -o lo -p tcp -m tcp --dport 9200 -m owner --uid-owner $USER -j ACCEPT
@@ -89,10 +96,6 @@ case $RELEASE in
 esac
 
 yum -y install katello
-# I need to revisit customizing the installer answer file
-#  It appears that there is an answer file (initially) which is then updated by katello-installer?
-#sed -i -e 's/North Carolina/District of Columbia/g' /etc/katello-installer/answers.katello-installer.yaml
-#sed -i -e 's/Raliegh/Washington/g' /etc/katello-installer/answers.katello-installer.yaml
 katello-installer
 
 mkdir ~/.hammer ~/.foreman
@@ -128,8 +131,13 @@ yum install ruby193-rubygem-foreman_openscap
 service foreman restart
 
 exit 0
+== Good to know links
 https://rh7sat6.matrix.private/foreman_tasks/tasks?search=state+=+paused
 https://rh7sat6.matrix.private/foreman_tasks/tasks?search=state+=+planned
 https://rh7sat6.matrix.private/foreman_tasks/tasks?search=result+=+pending
+
+== TODO
+make sure the entire process is scripted: register host, create Organization, import channels, create Lifecycle Env
+
 
 
