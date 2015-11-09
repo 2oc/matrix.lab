@@ -4,7 +4,7 @@ RHNUSER=""
 RHNPASSWD=""
 ORGANIZATION=""
 SATVERSION="6.1"
-SATNAME="rh7sat6"
+SATELLITE="rh7sat6"
 DOMAIN="matrix.lab"
 
 # Log the output of the script
