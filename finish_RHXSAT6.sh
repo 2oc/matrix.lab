@@ -1,5 +1,9 @@
 #!/bin/bash
 
+### NOTES ###
+# You will likely look at some of this "code" and immediately see opportunities for improvement.
+# I'm not simply lazy... I have reasons for most of my "odd code" ;-)
+
 RHNUSER=""
 RHNPASSWD=""
 ORGANIZATION=""
