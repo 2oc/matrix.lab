@@ -20,30 +20,29 @@ systemctl restart openshift-master
 # DO NOT STOP DOCKER
 rm -rf /var/lib/docker/*
 REGISTRY="registry.access.redhat.com"; PTH="openshift3"
-docker pull $REGISTRY/$PTH/ose-haproxy-router:v3.0.0.1 ; docker pull $REGISTRY/$PTH/ose-deployer:v3.0.0.1 ; docker pull $REGISTRY/$PTH/ose-sti-builder:v3.0.0.1 ; docker pull $REGISTRY/$PTH/ose-sti-image-builder:v3.0.0.1 ; docker pull $REGISTRY/$PTH/ose-docker-builder:v3.0.0.1 ; docker pull $REGISTRY/$PTH/ose-pod:v3.0.0.1 ; docker pull $REGISTRY/$PTH/ose-keepalived-ipfailover:v3.0.0.1 ; docker pull $REGISTRY/$PTH/ruby-20-rhel7 ; docker pull $REGISTRY/$PTH/mysql-55-rhel7 ; docker pull openshift/hello-openshift:v0.4.3
+REGISTRY="rh7sat6.aperature.lab"; PTH="openshift3"
+IMAGES="ose-haproxy-router:v3.0.0.1
+ose-deployer:v3.0.0.1
+ose-sti-builder:v3.0.0.1
+ose-sti-image-builder:v3.0.0.1
+ose-docker-builder:v3.0.0.1
+ose-pod:v3.0.0.1
+ose-keepalived-ipfailover:v3.0.0.1
+ruby-20-rhel7
+mysql-55-rhel7
+hello-openshift:v0.4.3
+ose-docker-registry:v3.0.2.0"
+for IMG in $IMAGES; do echo "\"docker pull "$REGISTRY/$PTH/${IMG}\""; docker pull "$REGISTRY/$PTH/${IMG}"; done
 
 # CLEANUP (REMOVE) PROJECT OBJECTS
 oc delete all --all
 
 # Check ETCD health
 etcdctl -C \
-    https://rh7osetcd01.aperture.lab:2379,https://rh7osetcd01.aperture.lab:2379,https://rh7osetcd01.aperture.lab:2379 \
-    --ca-file=/etc/openshift/master/master.etcd-ca.crt \
-    --cert-file=/etc/openshift/master/master.etcd-client.crt \
-    --key-file=/etc/openshift/master/master.etcd-client.key cluster-health
+   https://rh7osetcd01.aperture.lab:2379,https://rh7osetcd02.aperture.lab:2379,https://rh7osetcd03.aperture.lab:2379 \
+   --ca-file=/etc/etcd/generated_certs/openshift-master-rh7osemst01.aperture.lab/master.etcd-ca.crt \
+   --cert-file=/etc/etcd/generated_certs/openshift-master-rh7osemst01.aperture.lab/master.etcd-client.crt \
+   --key-file=/etc/etcd/generated_certs/openshift-master-rh7osemst01.aperture.lab//master.etcd-client.key cluster-health
 
-# If your ETCD hosts do not include the master...
-#  You will need to run this on a host that has the etcd packages installed
-etcdctl -C \
-   https://rh7osetcd01.matrix.lab:2379,https://rh7osetcd01.matrix.lab:2379,https://rh7osetcd01.matrix.lab:2379 \
-   --ca-file=/etc/etcd/generated_certs/openshift-master-rh7osemst01.matrix.lab/master.etcd-ca.crt \
-   --cert-file=/etc/etcd/generated_certs/openshift-master-rh7osemst01.matrix.lab/master.etcd-client.crt \
-   --key-file=/etc/etcd/generated_certs/openshift-master-rh7osemst01.matrix.lab//master.etcd-client.key cluster-health 
 Passwd: r3dh4t1!
-
-
-# Working on clustered (HA) Masters..
-oc export node rh7osemst02.matrix.lab > rh7osemst01.matrix.lab.json
-sed -i -e 's/rh7osemst02.matrix.lab/rh7osemst01.matrix.lab/g' rh7osemst01.matrix.lab.json
-oc create -f rh7osemst01.matrix.lab.json
 
