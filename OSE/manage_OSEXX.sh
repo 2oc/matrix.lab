@@ -71,6 +71,25 @@ oadm registry --create \
 oc volume dc/docker-registry --add --overwrite -t persistentVolumeClaim \
   --claim-name=registry-claim --name=registryvol
 
+######################
+# Registry (Secure)
+######################
+REGIP=`oc get service docker-registry | grep docker-registry | awk '{ print $2 }'`
+CERTPATH=/etc/openshift/master/
+oadm ca create-server-cert --signer-cert=${CERTPATH}ca.crt \
+  --signer-key=${CERTPATH}ca.key --signer-serial=${CERTPATH}ca.serial.txt \
+  --hostnames='docker-registry.default.svc.cluster.local,${REGIP}' \
+  --cert=${CERTPATH}registry.crt --key=${CERTPATH}registry.key
+oc secrets new registry-secret ${CERTPATH}registry.crt ${CERTPATH}registry.key
+oc secrets add serviceaccounts/default secrets/registry-secret
+oc volume dc/docker-registry --add --type=secret \
+    --secret-name=registry-secret -m /etc/secrets
+oc env dc/docker-registry \
+    REGISTRY_HTTP_TLS_CERTIFICATE=/etc/secrets/registry.crt \
+    REGISTRY_HTTP_TLS_KEY=/etc/secrets/registry.key
+POD=`oc get pods | grep ^docker-registry | awk '{ print $1 }'`
+oc -it -p $POD exec ls /etc/secrets # this doesn't work for some reason....
+
 ######################### ######################### #########################
 # Router
 #  NOTE:  You need a registry before you can create the router
@@ -329,25 +348,6 @@ oc new-app https://github.com/jradtke-rh/petstore.git --name=petstore
 curl `oc get services | grep petstore | awk '{ print $2":"$4 }' | cut -f1 -d\/`
 oc expose service petstore --hostname=petstore.cloudapps.matrix.lab
 oc exec -it -p petstore-1-build /bin/bash # This doesn't work since it is a privileged container, or something...
-
-######################
-# Registry (Securing)
-######################
-REGIP=`oc get service docker-registry | grep docker-registry | awk '{ print $2 }'`
-CERTPATH=/etc/openshift/master/
-oadm ca create-server-cert --signer-cert=${CERTPATH}ca.crt \
-  --signer-key=${CERTPATH}ca.key --signer-serial=${CERTPATH}ca.serial.txt \
-  --hostnames='docker-registry.default.svc.cluster.local,${REGIP}' \
-  --cert=${CERTPATH}registry.crt --key=${CERTPATH}registry.key
-oc secrets new registry-secret ${CERTPATH}registry.crt ${CERTPATH}registry.key
-oc secrets add serviceaccounts/default secrets/registry-secret
-oc volume dc/docker-registry --add --type=secret \
-    --secret-name=registry-secret -m /etc/secrets
-oc env dc/docker-registry \
-    REGISTRY_HTTP_TLS_CERTIFICATE=/etc/secrets/registry.crt \
-    REGISTRY_HTTP_TLS_KEY=/etc/secrets/registry.key
-POD=`oc get pods | grep ^docker-registry | awk '{ print $1 }'`
-oc -it -p $POD exec ls /etc/secrets # this doesn't work for some reason....
 
 ######################
 # GIT Quicky
