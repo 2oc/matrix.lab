@@ -278,33 +278,6 @@ cat <<EOF > hello-pod.json
 EOF
 oc create -f hello-pod.json -n resourcemanagement
 
-######################
-# PROJECT (S2I Build)
-######################
-# On Master
-#  Simple Sinatra using source
-MYPROJ='hello-s2i'
-oadm new-project ${MYPROJ} --display-name="Hello Source2Image" \
-    --description="This project is for Source to Image builds" \
-      --node-selector='region=primary' --admin=oseuser
-# Since I have now "plumbed my ENV to AD"....
-oc policy add-role-to-user admin 'CN=OSE User,CN=Users,DC=matrix,DC=lab' -n hello-s2i
-
-su - oseuser
-oc login -u oseuser -p Passw0rd --insecure-skip-tls-verify --server=https://rh7osemst01.matrix.lab:8443
-MYPROJ='hello-s2i'
-mkdir -p ~/Projects/${MYPROJ}; cd $_
-oc project ${MYPROJ} 
-oc new-app https://github.com/openshift/simple-openshift-sinatra-STI.git -o json | tee ./simple-sinatra.json
-oc create -f ./simple-sinatra.json -n ${MYPROJ}
-oc build-logs `oc get builds | grep sinatra | awk '{ print $1 }'`
-
-curl http://`oc get services | grep sinatra | awk '{ print $2":"$4 }' | cut -f1 -d\/`
-
-oc expose service simple-openshift-sinatra \
-  --hostname=mysinatra.cloudapps.matrix.lab
-# oc edit route
-
 ###################################
 #  Simple Sinatra using my update 
 cd ~/projects/simple-sinatra
