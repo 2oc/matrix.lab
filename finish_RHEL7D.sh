@@ -8,7 +8,7 @@ mkfs.xfs /dev/rhel/rhel-home
 mount -a
 
 VIRT=0
-subscription-manager register --auto-attach  --username=${RHNUSER} --password='RHNPASSWD'
+subscription-manager register --auto-attach  --username=${RHNUSER} --password='${RHNPASSWD}'
 
 subscription-manager repos --disable "*"
 uname -a | grep el6 && RELEASE="6Server" || RELEASE="7Server"
