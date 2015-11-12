@@ -117,7 +117,10 @@ cd
 git clone https://github.com/openshift/openshift-ansible
 cd openshift-ansible
 mv /etc/ansible/hosts /etc/ansible/hosts.orig
-MASTERS=`grep rh7osemst ~/hosts`
+MASTERS=`grep -i rh7osemst ~/hosts`
+# The following blurb will grab the appropriate (pre)configured host file from my network.
+#  You... however, will need to create your own from these examples.
+#  https://docs.openshift.org/latest/install_config/install/advanced_install.html
 case $HAMSTR in
   0|no)
     echo "# NOTE:  Building OSE using a single master"
