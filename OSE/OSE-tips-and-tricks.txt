@@ -35,6 +35,7 @@ ose-docker-registry:v3.0.2.0"
 for IMG in $IMAGES; do echo "\"docker pull "$REGISTRY/$PTH/${IMG}\""; docker pull "$REGISTRY/$PTH/${IMG}"; done
 
 # CLEANUP (REMOVE) PROJECT OBJECTS
+oc project <project name>
 oc delete all --all
 
 # Check ETCD health
