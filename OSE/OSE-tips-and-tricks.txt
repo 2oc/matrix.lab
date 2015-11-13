@@ -11,6 +11,16 @@ systemctl restart openshift-master
 journalctl -f -u openshift-master
 journalctl -f -u openshift-node
 
+# REMOVE ALL REGISTRY ENTRIES
+  for resource in service deploymentConfig pod route serviceaccount secret rc; do
+    resource_names=$(oc get $resource | awk '/registry/ {print $1}')
+    for name in ${resource_names/'\n'/ }; do
+      echo "oc delete $resource $name"
+      oc delete $resource $name
+    done
+  done
+
+
 # Setting a default node (no idea why though?)
 sed -i 's/defaultNodeSelector: ""/defaultNodeSelector: "region=primary"' /etc/openshift/master/master-config.yaml
 systemctl restart openshift-master
