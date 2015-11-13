@@ -88,6 +88,7 @@ oc env dc/docker-registry \
     REGISTRY_HTTP_TLS_CERTIFICATE=/etc/secrets/registry.crt \
     REGISTRY_HTTP_TLS_KEY=/etc/secrets/registry.key
 POD=`oc get pods | grep ^docker-registry | awk '{ print $1 }'`
+# wait until registry is redeployed (check oc get all)
 oc -it -p $POD exec ls /etc/secrets # this doesn't work for some reason....
 
 ######################### ######################### #########################
