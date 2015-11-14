@@ -16,6 +16,9 @@ for ITEM in pv pvc; do echo "## $ITEM"; oc get $ITEM; done
 ##########################
 # Declare PVs/PVCs on Master for Registry
 ##########################
+VOLSIZE="1Gi"
+PATH="/exports/nfs/pvs/registry"
+NFSSERVER="192.168.122.1"
 mkdir -p ~/Projects/default; cd $_
 cat << EOF > registry-volume.json
     {
@@ -26,16 +29,15 @@ cat << EOF > registry-volume.json
       },
       "spec": {
         "capacity": {
-            "storage": "1Gi"
+            "storage": "${VOLSIZE}"
             },
         "accessModes": [ "ReadWriteMany" ],
         "nfs": {
-            "path": "/export/nfs/pvs/registryvol",
-            "server": "rhel7d.matrix.lab"
+            "path": "${PATH}",
+            "server": "${NFSSERVER}"
         }
       }
     }
-
 EOF
 oc create -f registry-volume.json -n default
 cat << EOF > registry-volume-claim.json
