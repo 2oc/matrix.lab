@@ -26,7 +26,7 @@ systemctl enable tuned
 
 #subscription-manager list --available --all > /var/tmp/subscription-manager_list--available--all.out
 POOL=`grep -A15 "Red Hat Satellite 6" /var/tmp/subscription-manager_list--available--all.out | grep "Pool ID:" | awk -F: '{ print $2 }' | sed -e 's/^[ \t]*//' -e 's/[ \t]*$//'`
-#subscription-manager subscribe --pool=${POOL} #8a85f98148751d430148854202ee26c5
+#subscription-manager subscribe --pool=${POOL} 
 #subscription-manager repos --disable "*"
 #subscription-manager repos > /var/tmp/subscription-manager_repos.out
 

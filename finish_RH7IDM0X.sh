@@ -32,9 +32,8 @@ done
 firewall-cmd --reload
 firewall-cmd --list-ports
 
-systemctl disable chronyd && systemctl stop chronyd 
 sed -i -e 's/restrict ::1/restrict ::1\nrestrict 10.10.10.0 netmask 255.255.255.0 nomodify notrap/g' /etc/ntp.conf
-systemctl enable ntpd && systemctl start ntpd
+systemctl enable chronyd && systemctl start chronyd 
 
 yum -y install ipa-server bind bind-dyndb-ldap
 
