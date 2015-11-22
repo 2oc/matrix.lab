@@ -10,10 +10,10 @@
 #   This is not intended to simply be run on a single node... it's still in a form where pieces 
 #     need to be selectively applied (i.e. some steps are run on the master, other on the nodes, other on both...)
 HAMSTR=0
-VERSION=3.1
+OSEVERSION=3.1
 
 DOMAIN=`hostname -d`
-case $DOMAIN in
+case $DOMAIN in 
   'matrix.lab')
     WEBREPO=10.10.10.10
   ;;
@@ -29,7 +29,6 @@ esac
 
 cat << EOF > hosts
 rh7osemst01.${DOMAIN}
-rh7osemst02.${DOMAIN}
 rh7osetcd01.${DOMAIN}
 rh7osetcd02.${DOMAIN}
 rh7osetcd03.${DOMAIN}
@@ -41,30 +40,47 @@ EOF
 
 # Passw0rd
 # Distribute Keys to ALL the OSe nodes (master, nodes, routers)
-for HOST in `cat hosts`
+if [ ! -f ~/.ssh/id_rsa.pub ]; then echo | ssh-keygen -trsa -b2048 -N''; fi
+for HOST in `cat ~/hosts`
 do
-  #if [ ! -f ~/.ssh/id_rsa.pub ]; then echo | ssh-keygen -trsa -b2048 -N''; fi
-  ssh-copy-id -oStrictHostKeyChecking=no $HOST
+  ssh-copy-id -i ~/.ssh/id_rsa -oStrictHostKeyChecking=no $HOST
 done
-for HOST in `cat hosts`
+for HOST in `cat ~/hosts`
 do
-  ssh $HOST "uptime"
+  ssh $HOST "hostname; uptime"
 done
 
 # CONFIGURE REPO(S) 
 for HOST in `cat hosts` 
 do  
   echo "Configuring: $HOST"
-  ssh $HOST bash -c "' subscription-manager repos --disable=*; subscription-manager repos --enable rhel-7-server-rpms --enable rhel-7-server-optional-rpms --enable rhel-7-server-extras-rpms --enable rhel-7-server-ose-3.0-rpms 
+  ssh $HOST bash -c "' subscription-manager repos --enable rhel-7-server-rpms --enable rhel-7-server-optional-rpms --enable rhel-7-server-extras-rpms --enable rhel-7-server-ose-${OSEVERSION}-rpms 
 '"
 done
 
 # THIS SHOULD ONLY RUN ON THE MASTER
 yum -y install wget git net-tools bind-utils iptables-services bridge-utils python-virtualenv gcc
 yum -y install docker 
-#  DOUBLE-CHECK THE RESULTS OF THIS COMMAND....
-sed -i -e "s/OPTIONS='--selinux-enabled'/OPTIONS='--selinux-enabled --insecure-registry 172.30.0.0\/16'/" /etc/sysconfig/docker
-yum -y install http://mirror.sfo12.us.leaseweb.net/epel/7/x86_64/e/epel-release-7-5.noarch.rpm
+#  Uncomment the following if you do NOT intend on having a secure registry
+#sed -i -e "s/OPTIONS='--selinux-enabled'/OPTIONS='--selinux-enabled --insecure-registry 172.30.0.0\/16'/" /etc/sysconfig/docker
+#  Add EPEL 
+yum repolist | grep -i epel
+case $? in 
+  0)
+    echo "NOTE:  EPEL is already present"
+  ;;
+  *)
+    POOLID=`subscription-manager list --available --all | awk '/EPEL/ {flag=1;next} /Available:/{flag=0} flag {print}' | grep ^Pool | awk '{ print $3 }'`
+    if [ -z ${POOLID} ]
+    then
+      echo "NOTE:  Installing external EPEL"
+      yum -y install http://mirror.sfo12.us.leaseweb.net/epel/7/x86_64/e/epel-release-7-5.noarch.rpm
+    else 
+      subscription-manager subscribe --pool=${POOLID}
+      subscription-manager repos --enable='${ORGANIZATION}_Extra_Packages_for_Enterprise_Linux_EPEL_7_-_x86_64'
+    fi
+  ;;
+esac
 yum -y install ansible 
 
 # Configure Docker storage (only on Docker nodes, obviously...)
@@ -118,26 +134,23 @@ cd
 git clone https://github.com/openshift/openshift-ansible
 cd openshift-ansible
 mv /etc/ansible/hosts /etc/ansible/hosts.orig
-MASTERS=`grep -i rh7osemst ~/hosts`
-# The following blurb will grab the appropriate (pre)configured host file from my network.
-#  You... however, will need to create your own from these examples.
-#  https://docs.openshift.org/latest/install_config/install/advanced_install.html
+MASTERS=`grep rh7osemst ~/hosts`
 case $HAMSTR in
   0|no)
     echo "# NOTE:  Building OSE using a single master"
-    wget ${WEBREPO}/OSE/ose-single_master-multi_etcd-${VERSION}.txt -O /etc/ansible/hosts
+    wget ${WEBREPO}/OSE/ose-single_master-multi_etcd-${OSEVERSION}.txt -O /etc/ansible/hosts
   ;;
   *)
     echo "# NOTE:  Building OSE using multiple master"
-    wget ${WEBREPO}/OSE/ose-multi_master-multi_etcd-${VERSION}.txt -O /etc/ansible/hosts
+    wget ${WEBREPO}/OSE/ose-multi_master-multi_etcd-${OSEVERSION}.txt -O /etc/ansible/hosts
     for HOST in `grep -i rh7osemst ~/hosts`; do ssh $HOST "subscription-manager repos --enable=rhel-ha-for-rhel-7-server-rpms"; done
   ;;
 esac 
-cat << EOF > ./.ansible.cfg
+cat << EOF > ~/.ansible.cfg
 [defaults] 
-log_path=./installation.log
+log_path=~/.ansible.log
 EOF
-# See if this works (instead of cd ~; )
+
 ansible-playbook ~/openshift-ansible/playbooks/byo/config.yml
 
 # I believe this is not necessary...
@@ -168,12 +181,26 @@ sed -i -e 's/kind: DenyAllPasswordIdentityProvider/kind: HTPasswdPasswordIdentit
 yum -y install httpd-tools
 touch /etc/openshift/openshift-passwd
 htpasswd -b /etc/openshift/openshift-passwd oseuser Passw0rd
-htpasswd -b /etc/openshift/openshift-passwd admin Passw0rd
-useradd admin && echo Passw0rd | passwd --stdin admin
 systemctl restart openshift-master
 
 HOSTLIST="rh7oseinf01 rh7oseinf02 rh7osenod01 rh7osenod02"
 for NODE in $HOSTLIST; do ssh $NODE "setsebool -P virt_use_nfs=true"; done
+
+exit 0
+
+### VERY TEMPORARY WORK-AROUND
+wget https://raw.githubusercontent.com/rhtconsulting/rhc-ose/openshift-enterprise-3/provisioning/templates/image-streams-rhel7-ose3_0_2.json -O /root/openshift-ansible/roles/openshift_examples/files/examples/image-streams/image-streams-rhel7-ose3_0_2.json
+oc delete imagestreams --all -n openshift
+oc create -n openshift -f /root/openshift-ansible/roles/openshift_examples/files/examples/image-streams/image-streams-rhel7-ose3_0_2.json
+oc create -n openshift -f /usr/share/openshift/examples/xpaas-streams/jboss-image-streams.json
+
+
+### SATELLITE 6 INTEGRATION (Work in Progress 20151103)
+curl http://rh7sat6.aperture.lab/pub/katello-server-ca.crt -O /etc/pki/ca-trust/source/anchors/katello-server-ca.crt
+update-ca-trust
+
+curl -X GET https://rh7sat6.aperture.lab:5000/v1/search?q=rhel7
+curl -X GET https://rh7sat6.aperture.lab:5000/v1/search?q=latest
 
 exit 0
 
@@ -183,10 +210,11 @@ exit 0
 update_dns() {
 ssh rh7idm01
 kinit admin
-ipa dnszone-add cloudapps.${DOMAIN} --admin-email=root@${DOMAIN} --minimum=3000 --dynamic-update
-ipa dnsrecord-add cloudapps.${DOMAIN} '*' --a-rec 10.10.10.135
-ipa dnsrecord-add cloudapps.${DOMAIN} '*' --a-rec 10.10.10.136
-ipa dnszone-mod --allow-transfer='10.10.10.0/24' cloudapps.${DOMAIN}
+ipa dnszone-add cloudapps.aperture.lab --admin-email=root@aperture.lab --minimum=3000 --dynamic-update
+ipa dnsrecord-add cloudapps.aperture.lab '*' --a-rec 192.168.122.135
+ipa dnsrecord-add cloudapps.aperture.lab '*' --a-rec 192.168.122.136
+ipa dnszone-mod --allow-transfer='192.168.122.0;127.0.0.1' aperture.lab
+
 }
 
 # [root@rh6ns01 ~]# host -l matrix.lab | grep -v rh7idm | sed 's/.matrix.lab//g' | grep -v dhcp | awk '{ print "ipa dnsrecord-add matrix.lab "$1" --a-rec "$4 }'
