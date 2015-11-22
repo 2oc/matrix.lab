@@ -21,14 +21,23 @@ esac
 
 # NOTE:  need to update this to allow it to be run numerous times (i.e. check whether a condition exists, then update if neccessary)
 
-   subscription-manager clean
-    yum -y localinstall http://${SATELLITE}.${DOMAIN}/pub/katello-ca-consumer-latest.noarch.rpm
-    subscription-manager register --org="${ORGANIZATION}" --environment="Library" --username='admin' --password='Passw0rd' --release=7Server --auto-attach --force
-    subscription-manager repos --enable rhel-7-server-rpms --enable rhel-7-server-rh-common-rpms --enable rhel-7-server-satellite-tools-6.1-rpms
-    yum -y install katello-agent
-    katello-package-upload 
+subscription-manager clean
+yum -y localinstall http://${SATELLITE}.${DOMAIN}/pub/katello-ca-consumer-latest.noarch.rpm
+case `hostname -s` in 
+  rh7ose*)
+    subscription-manager register --activationkey='OSEv3-Library' --org="${ORGANIZATION}" --release=7Server --force
+  ;;
+  *)
+    echo "NOTE: using username/password for Activation"
+    #subscription-manager register --org="${ORGANIZATION}" --environment="Library" --username='admin' --password='Passw0rd' --release=7Server  --auto-attach --force
+    #subscription-manager repos --enable rhel-7-server-rpms --enable rhel-7-server-rh-common-rpms --enable rhel-7-server-satellite-tools-6.1-rpms
+  ;;
+esac
 
-# Add fstab entry to bind-mount /var/tmp over /tmp
+yum -y install katello-agent
+katello-package-upload 
+
+# Add fstab entry to bind-mount /var/tmp over /tmp -- for STIG compliance
 #echo "# bind mount for /var/tmp" >> /etc/fstab
 #echo "/tmp /var/tmp none	bind" >> /etc/fstab
 

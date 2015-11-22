@@ -10,6 +10,7 @@
 #   This is not intended to simply be run on a single node... it's still in a form where pieces 
 #     need to be selectively applied (i.e. some steps are run on the master, other on the nodes, other on both...)
 HAMSTR=0
+VERSION=3.1
 
 DOMAIN=`hostname -d`
 case $DOMAIN in
@@ -124,11 +125,11 @@ MASTERS=`grep -i rh7osemst ~/hosts`
 case $HAMSTR in
   0|no)
     echo "# NOTE:  Building OSE using a single master"
-    wget ${WEBREPO}/OSE/ose-single_master-multi_etcd.txt -O /etc/ansible/hosts
+    wget ${WEBREPO}/OSE/ose-single_master-multi_etcd-${VERSION}.txt -O /etc/ansible/hosts
   ;;
   *)
     echo "# NOTE:  Building OSE using multiple master"
-    wget ${WEBREPO}/OSE/ose-multi_master-multi_etcd.txt -O /etc/ansible/hosts
+    wget ${WEBREPO}/OSE/ose-multi_master-multi_etcd-${VERSION}.txt -O /etc/ansible/hosts
     for HOST in `grep -i rh7osemst ~/hosts`; do ssh $HOST "subscription-manager repos --enable=rhel-ha-for-rhel-7-server-rpms"; done
   ;;
 esac 
