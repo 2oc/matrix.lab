@@ -82,7 +82,7 @@ restorecon -RFvv /var/lib/libvirt/images/${GUESTNAME}
 
 case $RELEASE in 
   EL6) OSDIR="RHEL-6.6-x86_64"; OSVARIANT="rhel6" ;;
-  EL7) OSDIR="RHEL-7.1-x86_64"; OSVARIANT="rhel7";;
+  EL7) OSDIR="RHEL-7.2-x86_64"; OSVARIANT="rhel7";;
   RHS3) OSDIR="RHS-3";;
   *)  echo "ERROR: Unsupported Release in $CONFIG"; exit 9;;
 esac

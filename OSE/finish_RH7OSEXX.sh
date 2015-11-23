@@ -16,9 +16,11 @@ DOMAIN=`hostname -d`
 case $DOMAIN in 
   'matrix.lab')
     WEBREPO=10.10.10.10
+    ORGANIZATION="MATRIXLABS"
   ;;
   'aperture.lab')
     WEBREPO=192.168.122.1
+    ORGANIZATION="APERTURELABS"
   ;;
   *)
     echo "ERROR: Domain not recognized foo..."
@@ -63,7 +65,7 @@ yum -y install wget git net-tools bind-utils iptables-services bridge-utils pyth
 yum -y install docker 
 #  Uncomment the following if you do NOT intend on having a secure registry
 #sed -i -e "s/OPTIONS='--selinux-enabled'/OPTIONS='--selinux-enabled --insecure-registry 172.30.0.0\/16'/" /etc/sysconfig/docker
-#  Add EPEL 
+#  Add EPEL  - THIS LOGIC FLOW SITLL NEEDS WORK...
 yum repolist | grep -i epel
 case $? in 
   0)
@@ -76,6 +78,7 @@ case $? in
       echo "NOTE:  Installing external EPEL"
       yum -y install http://mirror.sfo12.us.leaseweb.net/epel/7/x86_64/e/epel-release-7-5.noarch.rpm
     else 
+      echo "NOTE:  Using EPEL from Satellite"
       subscription-manager subscribe --pool=${POOLID}
       subscription-manager repos --enable='${ORGANIZATION}_Extra_Packages_for_Enterprise_Linux_EPEL_7_-_x86_64'
     fi
@@ -143,7 +146,12 @@ case $HAMSTR in
   *)
     echo "# NOTE:  Building OSE using multiple master"
     wget ${WEBREPO}/OSE/ose-multi_master-multi_etcd-${OSEVERSION}.txt -O /etc/ansible/hosts
-    for HOST in `grep -i rh7osemst ~/hosts`; do ssh $HOST "subscription-manager repos --enable=rhel-ha-for-rhel-7-server-rpms"; done
+    # 3.0 needs pacemaker (from the HA channel)
+    case $OSEVERSION in
+      3.0)
+        for HOST in `grep -i rh7osemst ~/hosts`; do ssh $HOST "subscription-manager repos --enable=rhel-ha-for-rhel-7-server-rpms"; done
+      ;;
+     esac
   ;;
 esac 
 cat << EOF > ~/.ansible.cfg
@@ -153,20 +161,10 @@ EOF
 
 ansible-playbook ~/openshift-ansible/playbooks/byo/config.yml
 
-# I believe this is not necessary...
-case $HAMSTR in
-  0|no)
-    echo "# NOTE: Proceeding"
-  ;;
-  *) 
-   oadm manage-node `grep rh7osemst hosts` --schedulable=false
-  ;;
-esac  
    ###########################################################
 #################### END OF METHOD 3 ############################
    ###########################################################
-  ;;
-esac
+
 # rm config and put the original ssh config back (if there was one)
 rm -f ~/.ssh/config && mv ~/.ssh/config-`date +%F` ~/.ssh/config 
 

@@ -15,10 +15,13 @@
 ####################
 
 # I have found it easier to NOT use whitespace in the ORGANIZATION Variable
+cat << EOF >> ~/.bash_profile
 ORGANIZATION="MATRIXLABS"
-LOCATION="Laptop"
+LOCATION="HomeLab"
 SATELLITE="rh7sat6"
 DOMAIN="matrix.lab"
+EXPORT DOMAIN SATELLITE LOCATION ORGANIZATION
+EOF
 RHNUSER=""
 RHNPASSWD=""
 
@@ -154,6 +157,9 @@ sh ./katello-installer.cmd
   
 yum -y update && shutdown now -r
 
+# If things don't seem to be working... (I don't know if this works long-term)
+# katello-installer --reset 
+
 ####################################################################################
 ## POST 
 ####################################################################################
@@ -197,7 +203,7 @@ hammer location add-organization --name="${LOCATION}" --organization="${ORGANIZA
 
 hammer domain create --name="${DOMAIN}"
 
-hammer subnet create --domain-ids=1 --gateway='10.10.10.1' --mask='255.255.255.0' --name='10.10.10.0/24' --tftp-id=1 --network='10.10.10.0' --dns-primary='10.10.10.122' --dns-secondary='10.10.10.123'
+hammer subnet create --domain-ids=1 --gateway='10.10.10.1' --mask='255.255.255.0' --name='10.10.10.0/24' --tftp-id=1 --network='10.10.10.0' --dns-primary='10.10.10.121' --dns-secondary='10.10.10.122'
 
 hammer organization add-subnet --subnet-id=1 --name="${ORGANIZATION}"
 hammer organization add-domain --domain="${DOMAIN}" --name="${ORGANIZATION}" 
@@ -217,7 +223,7 @@ hammer repository-set list --organization="${ORGANIZATION}" --product "${PRODUCT
 REPOS="3815 2463 2472 2456 2476"
 for REPO in $REPOS
 do
-  echo; echo "NOTE:  Enabling: `grep $REPO ~/hammer_repository-set_list-"${PRODUCT}".out | cut -f3 -d\|`"
+  echo; echo "NOTE:  Enabling (${REPO}): `grep $REPO ~/hammer_repository-set_list-"${PRODUCT}".out | cut -f3 -d\|`"
   echo "hammer repository-set enable --organization=\"${ORGANIZATION}\" --basearch='x86_64' --releasever='7Server' --product=\"${PRODUCT}\" --id=\"${REPO}\" "
   hammer repository-set enable --organization="${ORGANIZATION}" --basearch='x86_64' --releasever='7Server' --product="${PRODUCT}" --id="${REPO}"
 done
@@ -225,7 +231,7 @@ done
 REPOS="4185 4188 3030"
 for REPO in $REPOS
 do
-  echo; echo "NOTE:  Enabling: `grep $REPO ~/hammer_repository-set_list-"${PRODUCT}".out | cut -f3 -d\|`"
+  echo; echo "NOTE:  Enabling (${REPO}): `grep $REPO ~/hammer_repository-set_list-"${PRODUCT}".out | cut -f3 -d\|`"
   hammer repository-set enable --organization="${ORGANIZATION}" --basearch='x86_64' --product="${PRODUCT}" --id="${REPO}"
 done
 ######################
@@ -234,14 +240,14 @@ hammer repository-set list --organization="${ORGANIZATION}" --product "${PRODUCT
 REPOS="4025"  # 3.0
 for REPO in $REPOS
 do
-  echo; echo "NOTE:  Enabling: `grep $REPO ~/hammer_repository-set_list-"${PRODUCT}".out | cut -f3 -d\|`"
+  echo; echo "NOTE:  Enabling (${REPO}): `grep $REPO ~/hammer_repository-set_list-"${PRODUCT}".out | cut -f3 -d\|`"
   hammer repository-set enable --organization="${ORGANIZATION}" --basearch='x86_64' --releasever='7Server' --product="${PRODUCT}" --id="${REPO}"
 done
 ## THERE ARE REPOS WHICH DO *NOT* ACCEPT A "releasever" VALUE
 REPOS="4658" # 3.1
 for REPO in $REPOS
 do
-  echo; echo "NOTE:  Enabling: `grep $REPO ~/hammer_repository-set_list-"${PRODUCT}".out | cut -f3 -d\|`"
+  echo; echo "NOTE:  Enabling (${REPO}): `grep $REPO ~/hammer_repository-set_list-"${PRODUCT}".out | cut -f3 -d\|`"
   hammer repository-set enable --organization="${ORGANIZATION}" --basearch='x86_64' --product="${PRODUCT}" --id="${REPO}"
 done
 ######################
@@ -250,31 +256,32 @@ hammer repository-set list --organization="${ORGANIZATION}" --product "${PRODUCT
 REPOS="2808"
 for REPO in $REPOS
 do
-  echo; echo "NOTE:  Enabling: `grep $REPO ~/hammer_repository-set_list-"${PRODUCT}".out | cut -f3 -d\|`"
+  echo; echo "NOTE:  Enabling (${REPO}): `grep $REPO ~/hammer_repository-set_list-"${PRODUCT}".out | cut -f3 -d\|`"
   hammer repository-set enable --organization="${ORGANIZATION}" --basearch='x86_64' --releasever='7Server' --product="${PRODUCT}" --id="${REPO}"
 done
 ######################
 PRODUCT='Red Hat Enterprise Virtualization'
 hammer repository-set list --organization="${ORGANIZATION}" --product "${PRODUCT}" > ~/hammer_repository-set_list-"${PRODUCT}".out
-REPOS="4425 3245 3109"
+REPOS="3245 3109"
 for REPO in $REPOS
 do
-  echo; echo "NOTE:  Enabling: `grep $REPO ~/hammer_repository-set_list-"${PRODUCT}".out | cut -f3 -d\|`"
+  echo; echo "NOTE:  Enabling (${REPO}): `grep $REPO ~/hammer_repository-set_list-"${PRODUCT}".out | cut -f3 -d\|`"
   hammer repository-set enable --organization="${ORGANIZATION}" --basearch='x86_64' --releasever='7Server' --product="${PRODUCT}" --id="${REPO}"
 done
 ## THIS PACKAGE IS 6Server specific (at this time)
 REPOS=4425
 for REPO in $REPOS
 do
-  echo; echo "NOTE:  Enabling: `grep $REPO ~/hammer_repository-set_list-"${PRODUCT}".out | cut -f3 -d\|`"
-  hammer repository-set enable --organization="${ORGANIZATION}" --basearch='x86_64' --product="${PRODUCT}" --id="${REPO}"
+  echo; echo "NOTE:  Enabling (${REPO}): `grep $REPO ~/hammer_repository-set_list-"${PRODUCT}".out | cut -f3 -d\|`"
+  #hammer repository-set enable --organization="${ORGANIZATION}" --basearch='x86_64' --product="${PRODUCT}" --id="${REPO}"
+  hammer repository-set enable --organization="${ORGANIZATION}"  --product="${PRODUCT}" --id="${REPO}"
 done
 ######################
 PRODUCT='Oracle Java for RHEL Server'
 REPOS="3254"
 for REPO in $REPOS
 do
-  echo; echo "NOTE:  Enabling: `grep $REPO ~/hammer_repository-set_list-"${PRODUCT}".out | cut -f3 -d\|`"
+  echo; echo "NOTE:  Enabling (${REPO}): `grep $REPO ~/hammer_repository-set_list-"${PRODUCT}".out | cut -f3 -d\|`"
   #hammer repository-set enable --organization="${ORGANIZATION}" --basearch='x86_64' --releasever='7Server' --product="${PRODUCT}" --id="${REPO}"
 done
 
@@ -302,8 +309,9 @@ hammer lifecycle-environment create --name='PROD' --prior='TEST' --organization=
 # It's best y'all leave right now....
 exit 0
 
-
 # STILL NEED TO WORK ON THE REMAINDER.... FOR NOW, CREATE YOUR SYNC PLANS MANUALLY - GROUPED BY PRODUCT
+#################
+# SYNC PLANS
 #hammer sync-plan create --interval=daily --name='Daily sync' --organization="${ORGANIZATION}"
 #SYNCPLANID=`hammer sync-plan list --organization="${ORGANIZATION}"`
 # hammer product set-sync-plan --sync-plan-id=4 --organization="${ORGANIZATION}" --name='Oracle Java for RHEL Server'
@@ -313,10 +321,11 @@ exit 0
 hammer content-view create --name='rhel-7-server-x86_64-CV' --organization="${ORGANIZATION}"
 hammer content-view publish --name="rhel-7-server-x86_64-CV" --organization="${ORGANIZATION}" --async
 
-LIFECYCLEID=`hammer lifecycle-environment list --organization="${ORGANIZATION}" | grep "rhel-7-server-x86_64-CV" | awk '{ print $1 }'`
-for ID in `hammer lifecycle-environment list --organization="${ORGANIZATION}" | egrep -i 'PROD|DEV|TEST' | awk '{ print $1 }'`
+# NOT EVEN SURE WHAT I NEED TO DO HERE...
+LIFECYCLEID=`hammer lifecycle-environment list --organization="${ORGANIZATION}" | grep -v "Library" | awk '{ print $1 }' | head -1`
+for LIFECYCLEENV in `hammer lifecycle-environment list --organization="${ORGANIZATION}" | awk '{ print $1 }' | grep -v Library`
 do 
-  hammer content-view version promote --organization="${ORGANIZATION}"  --to-lifecycle-environment=${LIFECYCLEID} --id=${ID} --async
+  hammer content-view version promote --organization="${ORGANIZATION}"  --to-lifecycle-environment=${LIFECYCLEENV} --id=${LIFECYCLEID} --async
 done
 
 #################
@@ -338,7 +347,7 @@ for i in $(hammer --csv activation-key list --organization="${ORGANIZATION}" | a
 exit 0
 
 ## HELPFUL LINKS
-https://rh7sat6.matrix.lab/foreman_tasks/tasks?search=state+=+paused
+https://rh7sat6.matrix.lab/foreman_tasks/task?search=state+=+paused
 https://rh7sat6.matrix.lab/foreman_tasks/tasks?search=state+=+planned
 https://rh7sat6.matrix.lab/foreman_tasks/tasks?search=result+=+pending
 
