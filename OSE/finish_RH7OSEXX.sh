@@ -42,7 +42,7 @@ EOF
 
 # Passw0rd
 # Distribute Keys to ALL the OSe nodes (master, nodes, routers)
-if [ ! -f ~/.ssh/id_rsa.pub ]; then echo | ssh-keygen -trsa -b2048 -N''; fi
+if [ ! -f ~/.ssh/id_rsa.pub ]; then echo | ssh-keygen -trsa -b2048 -N ''; fi
 for HOST in `cat ~/hosts`
 do
   ssh-copy-id -i ~/.ssh/id_rsa -oStrictHostKeyChecking=no $HOST
@@ -53,7 +53,7 @@ do
 done
 
 # CONFIGURE REPO(S) 
-for HOST in `cat hosts` 
+for HOST in `grep -v mst01 hosts` 
 do  
   echo "Configuring: $HOST"
   ssh $HOST bash -c "' subscription-manager repos --enable rhel-7-server-rpms --enable rhel-7-server-optional-rpms --enable rhel-7-server-extras-rpms --enable rhel-7-server-ose-${OSEVERSION}-rpms 

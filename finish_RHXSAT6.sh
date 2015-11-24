@@ -284,7 +284,6 @@ do
   echo; echo "NOTE:  Enabling (${REPO}): `grep $REPO ~/hammer_repository-set_list-"${PRODUCT}".out | cut -f3 -d\|`"
   #hammer repository-set enable --organization="${ORGANIZATION}" --basearch='x86_64' --releasever='7Server' --product="${PRODUCT}" --id="${REPO}"
 done
-
 #################
 ## EPEL Stuff - Pay attention to the output of this section.  It's not tested/validated
 #    If it doesn't work, update the GPG-KEY via the WebUI
@@ -294,12 +293,10 @@ GPGKEYID=`hammer gpg list --name="GPG-EPEL-7" --organization="${ORGANIZATION}" |
 PRODUCT='Extra Packages for Enterprise Linux'
 hammer product create --name="${PRODUCT}" --organization="${ORGANIZATION}" 
 hammer repository create --name='EPEL 7 - x86_64' --organization="${ORGANIZATION}" --product="${PRODUCT}" --content-type='yum' --publish-via-http=true --url=http://dl.fedoraproject.org/pub/epel/7/x86_64/ --gpg-key-id="${GPGKEYID}" --gpg-key="${GPG-EPEL-7}"
-
 #################
 ## SYNC EVERYTHING (Manually)
 #for i in $(hammer --csv repository list --organization="${ORGANIZATION}" | awk -F, {'print $1'} | grep -vi '^ID'); do echo "hammer repository synchronize --id ${i} --organization=\"${ORGANIZATION}\" --async"; done
 for i in $(hammer --csv repository list --organization="${ORGANIZATION}" | awk -F, {'print $1'} | grep -vi '^ID'); do hammer repository synchronize --id ${i} --organization="${ORGANIZATION}" --async; done
-
 #################
 ## LIFECYCLE ENVIRONMENT
 hammer lifecycle-environment create --name='DEV' --prior='Library' --organization="${ORGANIZATION}"
@@ -333,14 +330,14 @@ done
 hammer host-collection create --name='RHEL 7 x86_64' --organization="${ORGANIZATION}"
 hammer activation-key create --description='DEV Activation Key' --name='rhel-7-server-x86_64-key-DEV' --lifecycle-environment='DEV' --organization="${ORGANIZATION}"
 hammer activation-key create --description='TEST Activation Key' --name='rhel-7-server-x86_64-key-TEST' --lifecycle-environment='TEST' --organization="${ORGANIZATION}"
-hammer activation-key create --description='PROD Activation Key' --name='rhel-7-server-x86_64-key-PROD' --lifecycle-environment='TEST' --organization="${ORGANIZATION}"
+hammer activation-key create --description='PROD Activation Key' --name='rhel-7-server-x86_64-key-PROD' --lifecycle-environment='PROD' --organization="${ORGANIZATION}"
 hammer activation-key add-host-collection --name='rhel-7-server-x86_64-key-DEV' --host-collection='RHEL 7 x86_64' --organization="${ORGANIZATION}"
 hammer activation-key add-host-collection --name='rhel-7-server-x86_64-key-TEST' --host-collection='RHEL 7 x86_64' --organization="${ORGANIZATION}"
 hammer activation-key add-host-collection --name='rhel-7-server-x86_64-key-PROD' --host-collection='RHEL 7 x86_64' --organization="${ORGANIZATION}"
 # OSE Activation Key (Contract: 10169796)
 hammer activation-key create --description='OSEv3 Library Activation Key' --name='OSEv3-Library' --lifecycle-environment='Library' --organization="${ORGANIZATION}"
 hammer activation-key add-host-collection --name='OSEv3-Library' --host-collection='RHEL 7 x86_64' --organization="${ORGANIZATION}"
-hammer activation-key add-subscription --name='OSEv3-Library' --subscription-id="4028fae651091d11015109343af3028a" --organization="${ORGANIZATION}" 
+
 ## ASSOCIATE KEYS AND SUBSCRIPTIONS
 for i in $(hammer --csv activation-key list --organization="${ORGANIZATION}" | awk -F, {'print $1'} | grep -vi '^ID'); do for j in $(hammer --csv subscription list --organization="${ORGANIZATION}" | awk -F, {'print $8'} | grep -vi '^ID'); do hammer activation-key add-subscription --id ${i} --subscription-id ${j}; done; done
 
