@@ -235,6 +235,17 @@ do
   hammer repository-set enable --organization="${ORGANIZATION}" --basearch='x86_64' --product="${PRODUCT}" --id="${REPO}"
 done
 ######################
+PRODUCT='Red Hat Enterprise Linux High Availability for RHEL Server'
+hammer repository-set list --organization="${ORGANIZATION}" --product "${PRODUCT}" > ~/hammer_repository-set_list-"${PRODUCT}".out
+REPOS="2762"
+for REPO in $REPOS
+do
+  echo; echo "NOTE:  Enabling (${REPO}): `grep $REPO ~/hammer_repository-set_list-"${PRODUCT}".out | cut -f3 -d\|`"
+  echo "hammer repository-set enable --organization=\"${ORGANIZATION}\" --basearch='x86_64' --releasever='7Server' --product=\"${PRODUCT}\" --id=\"${REPO}\" "
+  hammer repository-set enable --organization="${ORGANIZATION}" --basearch='x86_64' --releasever='7Server' --product="${PRODUCT}" --id="${REPO}"
+done
+
+######################
 PRODUCT='Red Hat OpenShift Enterprise'
 hammer repository-set list --organization="${ORGANIZATION}" --product "${PRODUCT}" > ~/hammer_repository-set_list-"${PRODUCT}".out
 REPOS="4025"  # 3.0
@@ -303,15 +314,20 @@ hammer lifecycle-environment create --name='DEV' --prior='Library' --organizatio
 hammer lifecycle-environment create --name='TEST' --prior='DEV' --organization="${ORGANIZATION}"
 hammer lifecycle-environment create --name='PROD' --prior='TEST' --organization="${ORGANIZATION}"
 
+#################
+# SYNC PLANS - I believe these are working now.
+hammer sync-plan create --enabled true --interval=daily --name='Daily sync - Red Hat' --description="Daily Sync Plan for Red Hat Products" --sync-date='2015-11-22 02:00:00' --organization="${ORGANIZATION}"
+hammer product set-sync-plan --sync-plan='Daily sync - Red Hat' --organization="${ORGANIZATION}" --name='Red Hat OpenShift Enterprise'
+hammer product set-sync-plan --sync-plan='Daily sync - Red Hat' --organization="${ORGANIZATION}" --name='Red Hat Enterprise Linux Server'
+hammer product set-sync-plan --sync-plan='Daily sync - Red Hat' --organization="${ORGANIZATION}" --name='Red Hat Enterprise Linux High Availability for RHEL Server'
+hammer product set-sync-plan --sync-plan='Daily sync - Red Hat' --organization="${ORGANIZATION}" --name='Red Hat OpenShift Enterprise'
+hammer product set-sync-plan --sync-plan='Daily sync - Red Hat' --organization="${ORGANIZATION}" --name='Red Hat Software Collections for RHEL Server'
+hammer product set-sync-plan --sync-plan='Daily sync - Red Hat' --organization="${ORGANIZATION}" --name='Red Hat Enterprise Virtualization'
+hammer sync-plan create --enabled true --interval=daily --name='Daily sync - EPEL' --description="Daily Sync Plan for EPEL" --sync-date='2015-11-22 03:00:00' --organization="${ORGANIZATION}"
+hammer product set-sync-plan --sync-plan='Daily sync - EPEL' --organization="${ORGANIZATION}" --name='Extra Packages for Enterprise Linux'
+
 # It's best y'all leave right now....
 exit 0
-
-# STILL NEED TO WORK ON THE REMAINDER.... FOR NOW, CREATE YOUR SYNC PLANS MANUALLY - GROUPED BY PRODUCT
-#################
-# SYNC PLANS
-#hammer sync-plan create --interval=daily --name='Daily sync' --organization="${ORGANIZATION}"
-#SYNCPLANID=`hammer sync-plan list --organization="${ORGANIZATION}"`
-# hammer product set-sync-plan --sync-plan-id=4 --organization="${ORGANIZATION}" --name='Oracle Java for RHEL Server'
 
 #################
 ## CONTENT VIEWS (I DONT UNDERSTAND THIS YET)

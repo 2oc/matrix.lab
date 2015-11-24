@@ -5,7 +5,7 @@
 masters
 nodes
 etcd
-lb
+#lb
 
 # Set variables common for all OSEv3 hosts
 [OSEv3:vars]
@@ -26,12 +26,12 @@ openshift_master_identity_providers=[{'name': 'htpasswd_auth', 'login': 'true', 
 #openshift_master_cluster_hostname=rh7osemst.matrix.lab
 #openshift_master_cluster_public_hostname=rh7osemst.matrix.lab
 
-openshift_master_cluster_method=pacemaker
-openshift_master_cluster_password=openshift_cluster
-openshift_master_cluster_vip=192.168.122.129
-openshift_master_cluster_public_vip=192.168.122.129
-openshift_master_cluster_hostname=rh7osemst.matrix.lab
-openshift_master_cluster_public_hostname=rh7osemst.matrix.lab
+#openshift_master_cluster_method=pacemaker
+#openshift_master_cluster_password=openshift_cluster
+#openshift_master_cluster_vip=192.168.122.129
+#openshift_master_cluster_public_vip=192.168.122.129
+#openshift_master_cluster_hostname=rh7osemst.matrix.lab
+#openshift_master_cluster_public_hostname=rh7osemst.matrix.lab
 
 # override the default controller lease ttl
 #osm_controller_lease_ttl=30
@@ -39,7 +39,7 @@ openshift_master_cluster_public_hostname=rh7osemst.matrix.lab
 # host group for masters
 [masters]
 rh7osemst01.matrix.lab
-rh7osemst02.matrix.lab
+#rh7osemst02.matrix.lab
 
 # host group for etcd
 [etcd]
@@ -53,7 +53,7 @@ rh7osetcd03.matrix.lab
 
 # host group for nodes, includes region info
 [nodes]
-rh7osemst0[1:2].matrix.lab openshift_node_labels="{'region': 'infra', 'zone': 'default'}"
+rh7osemst01.matrix.lab openshift_node_labels="{'region': 'infra', 'zone': 'default'}"
 rh7oseinf0[1:2].matrix.lab openshift_node_labels="{'region': 'infra', 'zone': 'default'}"
 rh7osenod01.matrix.lab openshift_node_labels="{'region': 'primary', 'zone': 'east'}"
 rh7osenod02.matrix.lab openshift_node_labels="{'region': 'primary', 'zone': 'west'}"
