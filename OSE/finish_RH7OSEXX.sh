@@ -188,7 +188,7 @@ for NODE in $HOSTLIST; do ssh $NODE "setsebool -P virt_use_nfs=true"; done
 # UPdate DNS zone
 cp /etc/openshift/master/master-config.yaml /etc/openshift/master/master-config.yaml-`date +%F`
 sed -i -e 's/openshift.default.svc.cluster.local/${CLOUDDOMAIN}/g' /etc/openshift/master/master-config.yaml
-sed -i -e 's/subdomain:  ""/subdomain:  "${CLOUDDOMAIN}"/g' /etc/openshift/master/master-config.yaml
+sed -i -e "s/subdomain:  \"\"/subdomain:  \"${CLOUDDOMAIN}\"/g" /etc/openshift/master/master-config.yaml
 systemctl restart openshift-master
 
 exit 0
