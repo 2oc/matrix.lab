@@ -13,6 +13,7 @@ HAMSTR=0
 OSEVERSION=3.1
 
 DOMAIN=`hostname -d`
+CLOUDDOMAIN="cloudapps.${DOMAIN}"
 case $DOMAIN in 
   'matrix.lab')
     WEBREPO=10.10.10.10
@@ -183,6 +184,12 @@ systemctl restart openshift-master
 
 HOSTLIST="rh7oseinf01 rh7oseinf02 rh7osenod01 rh7osenod02"
 for NODE in $HOSTLIST; do ssh $NODE "setsebool -P virt_use_nfs=true"; done
+
+# UPdate DNS zone
+cp /etc/openshift/master/master-config.yaml /etc/openshift/master/master-config.yaml-`date +%F`
+sed -i -e 's/openshift.default.svc.cluster.local/${CLOUDDOMAIN}/g' /etc/openshift/master/master-config.yaml
+sed -i -e 's/subdomain:  ""/subdomain:  "${CLOUDDOMAIN}"/g' /etc/openshift/master/master-config.yaml
+systemctl restart openshift-master
 
 exit 0
 
