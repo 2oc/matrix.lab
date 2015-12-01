@@ -205,6 +205,15 @@ esac
 
 exit 0
 
+# Appendix to meld Satellite 6 in to the fold...
+  ## On RH7IDM01...
+echo Passw0rd | kinit admin
+ipa host-add --desc="Satellite 6" --locality="Washington, DC" --location="LaptopLab" --os="Red Hat Enterprise Linux Server 7" --password=Passw0rd rh7sat6.aperture.lab
+ipa service-add HTTP/rh7sat6.aperture.lab@aperture.lab
+
+
+
+
 dig SRV _kerberos._tcp.matrix.lab | grep -v \;
 dig SRV _ldap._tcp.matrix.lab | grep -v \;
 

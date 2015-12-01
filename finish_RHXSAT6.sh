@@ -396,3 +396,12 @@ hammer content-view publish --organization="${ORGANIZATION}" --name "Production 
 hammer content-view version promote --organization="${ORGANIZATION}" --to-lifecycle-environment Development --content-view "Production Registry" --async
 hammer content-view version promote --organization="${ORGANIZATION}" --to-lifecycle-environment QA --content-view "Production Registry" --async
 hammer content-view version promote --organization="${ORGANIZATION}" --to-lifecycle-environment Production --content-view "Production Registry" --async
+
+
+##################################
+##   Red Hat IDM Integration
+## If you don't know what this, you probably should not proceed with any of this...
+
+yum -y install ipa-client foreman-proxy ipa-admintools
+ipa-client-install --password='Passw0rd'
+foreman-prepare-realm admin 
