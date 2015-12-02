@@ -118,7 +118,7 @@ rndc reload
 
 authconfig --enablemkhomedir --update
 echo "$ADMINPASSWD" | kinit 
-ipa dnszone-mod --allow-transfer=10.10.10.1/24 matrix.lab
+ipa dnszone-mod --allow-transfer='10.10.10.0/24;127.0.0.1' matrix.lab
 
 # EXAMPLE SYNTAX TO GENERATE HOST LIST FROM NS01
 # [root@rh6ns01 ~]# host -l matrix.lab | grep -v rh7idm | sed 's/.matrix.lab//g' | grep -v dhcp | awk '{ print "ipa dnsrecord-add matrix.lab "$1" --a-rec "$4 }'
@@ -141,14 +141,10 @@ ipa dnsrecord-add matrix.lab rh6storage04 --a-rec 10.10.10.115
 ipa dnsrecord-add matrix.lab rh6nfs --a-rec 10.10.10.116
 ipa dnsrecord-add matrix.lab rh6nfs01 --a-rec 10.10.10.117
 ipa dnsrecord-add matrix.lab rh6nfs02 --a-rec 10.10.10.118
-ipa dnsrecord-add matrix.lab puppet --a-rec 10.10.10.140
-ipa dnsrecord-add matrix.lab rh7puppet01 --a-rec 10.10.10.141
-ipa dnsrecord-add matrix.lab rh7puppet02 --a-rec 10.10.10.142
-ipa dnsrecord-add matrix.lab rh7etcd01 --a-rec 10.10.10.127
-ipa dnsrecord-add matrix.lab rh7etcd02 --a-rec 10.10.10.128
-ipa dnsrecord-add matrix.lab rh7etcd03 --a-rec 10.10.10.129
-ipa dnsrecord-add matrix.lab rh7osemst01 --a-rec 10.10.10.130
-ipa dnsrecord-add matrix.lab rh7osemst02 --a-rec 10.10.10.131
+ipa dnsrecord-add matrix.lab rh7osemst --a-rec 192.168.122.128
+ipa dnsrecord-add matrix.lab rh7osemst01 --a-rec 192.168.122.129
+ipa dnsrecord-add matrix.lab rh7osemst02 --a-rec 192.168.122.130
+ipa dnsrecord-add matrix.lab rh7osemst03 --a-rec 192.168.122.131
 ipa dnsrecord-add matrix.lab rh7osetcd01 --a-rec 10.10.10.132
 ipa dnsrecord-add matrix.lab rh7osetcd02 --a-rec 10.10.10.133
 ipa dnsrecord-add matrix.lab rh7osetcd03 --a-rec 10.10.10.134
@@ -179,14 +175,10 @@ ipa dnsrecord-add 10.10.10.in-addr.arpa 115 --ptr-rec rh6storage04.matrix.lab.
 ipa dnsrecord-add 10.10.10.in-addr.arpa 116 --ptr-rec rh6nfs.matrix.lab.
 ipa dnsrecord-add 10.10.10.in-addr.arpa 117 --ptr-rec rh6nfs01.matrix.lab.
 ipa dnsrecord-add 10.10.10.in-addr.arpa 118 --ptr-rec rh6nfs02.matrix.lab.
-ipa dnsrecord-add 10.10.10.in-addr.arpa 140 --ptr-rec puppet.matrix.lab.
-ipa dnsrecord-add 10.10.10.in-addr.arpa 141 --ptr-rec rh7puppet01.matrix.lab.
-ipa dnsrecord-add 10.10.10.in-addr.arpa 142 --ptr-rec rh7puppet02.matrix.lab.
-ipa dnsrecord-add 10.10.10.in-addr.arpa 127 --ptr-rec rh7etcd01.matrix.lab.
-ipa dnsrecord-add 10.10.10.in-addr.arpa 128 --ptr-rec rh7etcd02.matrix.lab.
-ipa dnsrecord-add 10.10.10.in-addr.arpa 129 --ptr-rec rh7etcd03.matrix.lab.
-ipa dnsrecord-add 10.10.10.in-addr.arpa 130 --ptr-rec rh7osemst00.matrix.lab.
-ipa dnsrecord-add 10.10.10.in-addr.arpa 131 --ptr-rec rh7osemst01.matrix.lab.
+ipa dnsrecord-add 10.10.10.in-addr.arpa 128 --ptr-rec rh7osemst.matrix.lab.
+ipa dnsrecord-add 10.10.10.in-addr.arpa 129 --ptr-rec rh7osemst01.matrix.lab.
+ipa dnsrecord-add 10.10.10.in-addr.arpa 130 --ptr-rec rh7osemst02.matrix.lab.
+ipa dnsrecord-add 10.10.10.in-addr.arpa 131 --ptr-rec rh7osemst03.matrix.lab.
 ipa dnsrecord-add 10.10.10.in-addr.arpa 132 --ptr-rec rh7osetcd01.matrix.lab.
 ipa dnsrecord-add 10.10.10.in-addr.arpa 133 --ptr-rec rh7osetcd02.matrix.lab.
 ipa dnsrecord-add 10.10.10.in-addr.arpa 134 --ptr-rec rh7osetcd03.matrix.lab.
@@ -208,8 +200,8 @@ exit 0
 # Appendix to meld Satellite 6 in to the fold...
   ## On RH7IDM01...
 echo Passw0rd | kinit admin
-ipa host-add --desc="Satellite 6" --locality="Washington, DC" --location="LaptopLab" --os="Red Hat Enterprise Linux Server 7" --password=Passw0rd rh7sat6.aperture.lab
-ipa service-add HTTP/rh7sat6.aperture.lab@aperture.lab
+ipa host-add --desc="Satellite 6" --locality="Washington, DC" --location="LaptopLab" --os="Red Hat Enterprise Linux Server 7" --password=Passw0rd rh7sat6.matrix.lab
+ipa service-add HTTP/rh7sat6.matrix.lab@matrix.lab
 
 
 
