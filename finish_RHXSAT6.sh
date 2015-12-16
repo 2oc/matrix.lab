@@ -154,7 +154,8 @@ EOF
 sh ./katello-installer.cmd
   #--capsule-dhcp=true --capsule-dhcp-interface=eth0 \
   #--capsule-dhcp-gateway="10.10.10.1" --capsule-dhcp-range="10.10.10.200 10.10.10.220" 
-  
+
+yum -y install katello-utils  
 yum -y update && shutdown now -r
 
 # If things don't seem to be working... (I don't know if this works long-term)
@@ -316,6 +317,7 @@ hammer lifecycle-environment create --name='PROD' --prior='TEST' --organization=
 
 #################
 # SYNC PLANS - I believe these are working now.
+#   I may... want to separate all the major products out to their own Sync Plan though.
 hammer sync-plan create --enabled true --interval=daily --name='Daily sync - Red Hat' --description="Daily Sync Plan for Red Hat Products" --sync-date='2015-11-22 02:00:00' --organization="${ORGANIZATION}"
 hammer product set-sync-plan --sync-plan='Daily sync - Red Hat' --organization="${ORGANIZATION}" --name='Red Hat OpenShift Enterprise'
 hammer product set-sync-plan --sync-plan='Daily sync - Red Hat' --organization="${ORGANIZATION}" --name='Red Hat Enterprise Linux Server'
@@ -330,15 +332,18 @@ hammer product set-sync-plan --sync-plan='Daily sync - EPEL' --organization="${O
 exit 0
 
 #################
-## CONTENT VIEWS (I DONT UNDERSTAND THIS YET)
-hammer content-view create --name='rhel-7-server-x86_64-CV' --organization="${ORGANIZATION}"
-hammer content-view publish --name="rhel-7-server-x86_64-CV" --organization="${ORGANIZATION}" --async
+## CONTENT VIEWS (I AM STILL LEARNING THIS YET...)
+## TODO: Add repos to the content-view
 
-# NOT EVEN SURE WHAT I NEED TO DO HERE...
 LIFECYCLEID=`hammer lifecycle-environment list --organization="${ORGANIZATION}" | grep -v "Library" | awk '{ print $1 }' | head -1`
-for LIFECYCLEENV in `hammer lifecycle-environment list --organization="${ORGANIZATION}" | awk '{ print $1 }' | grep -v Library`
+for LIFECYCLEENV in `hammer lifecycle-environment list --organization="${ORGANIZATION}" | awk -F\| '{ print $2 }' | egrep -v 'Library|NAME|^-'`
 do 
-  hammer content-view version promote --organization="${ORGANIZATION}"  --to-lifecycle-environment=${LIFECYCLEENV} --id=${LIFECYCLEID} --async
+  echo "hammer content-view create --name=\"Content View - ${LIFECYCLEENV}\" --organization=\"${ORGANIZATION}\" "
+  #hammer content-view create --name="Content View - ${LIFECYCLEENV}" --organization="${ORGANIZATION}"
+  echo "hammer content-view publish --name=\"Content View - ${LIFECYCLEENV}\" --organization=\"${ORGANIZATION}\" --async"
+  #hammer content-view publish --name="Content View - ${LIFECYCLEENV}" --organization="${ORGANIZATION}" --async
+  echo "hammer content-view version promote --organization=\"${ORGANIZATION}\" --content-view=\"Content View - ${LIFECYCLEENV}\" --to-lifecycle-environment=\"${LIFECYCLEENV}\" --version=1  --async"
+  #hammer content-view version promote --organization="${ORGANIZATION}" --content-view="Content View - ${LIFECYCLEENV}" --to-lifecycle-environment="${LIFECYCLEENV}" --version=1  --async
 done
 
 #################
@@ -359,44 +364,40 @@ for i in $(hammer --csv activation-key list --organization="${ORGANIZATION}" | a
 
 exit 0
 
-## HELPFUL LINKS
-https://rh7sat6.matrix.lab/foreman_tasks/task?search=state+=+paused
-https://rh7sat6.matrix.lab/foreman_tasks/tasks?search=state+=+planned
-https://rh7sat6.matrix.lab/foreman_tasks/tasks?search=result+=+pending
+#  WORK IN PROGRESS PAST THIS POINT...
 
 #################
-## DOCKER STUFF
-
+## Container Registry Stuff
 hammer product create --name='Containers' --organization="${ORGANIZATION}"
 hammer repository create --name='Red Hat Containers' --organization="${ORGANIZATION}" --product='Containers' --content-type='docker' --url='https://registry.access.redhat.com' --docker-upstream-name='rhel' --publish-via-http="true"
-hammer product synchronize --organization='MATRIX Labs' --name='Containers'
+hammer product synchronize --name='Containers' --organization="${ORGANIZATION}" 
 
-# Add a Compute Resource
-hammer compute-resource create --organizations 'MATRIX Labs' --locations 'Laptop Lab' --provider docker --name rh7ose01.matrix.lab --url http://rh7ose01.matrix.lab:4243
-hammer compute-resource create --organizations 'MATRIX Labs' --locations 'Laptop Lab' --provider docker --name rh7ose02.matrix.lab --url http://rh7ose02.matrix.lab:4243
+hammer repository info --id `hammer repository list --content-type docker --organization "${ORGANIZATION}" --content-view "Production Registry" --environment Production | grep docker | grep rhel | awk '{print $1}'` # Create Content View, Add Repo and Publish
+hammer content-view create --organization="${ORGANIZATION}" --name "Production Registry" --description "Production Registry"
+hammer content-view add-repository --organization="${ORGANIZATION}" --name "Production Registry" --repository "Red Hat Containers" --product "Containers"
+hammer content-view publish --organization="${ORGANIZATION}" --name "Production Registry"
 
-hammer repository info --id `hammer repository list --content-type docker --organization 'MATRIX Labs' --content-view "Production Registry" --environment Production | grep docker | grep rhel | awk '{print $1}'`
+#Promote Content View
+hammer content-view version promote --organization="${ORGANIZATION}" --to-lifecycle-environment DEV --content-view "Production Registry" --async; sleep 60
+hammer content-view version promote --organization="${ORGANIZATION}" --to-lifecycle-environment TEST --content-view "Production Registry" --async; sleep 60
+hammer content-view version promote --organization="${ORGANIZATION}" --to-lifecycle-environment PROD --content-view "Production Registry" --async; sleep 60
 
-# Publish from external repo
+# Create a Sync Plan
+hammer sync-plan create --enabled true --interval=daily --name='Daily sync - Red Hat Containers' --description="Daily Sync Plan for Red Hat Containers" --sync-date='2015-11-22 03:00:00' --organization="${ORGANIZATION}"
+hammer product set-sync-plan --sync-plan='Daily sync - Red Hat Containers' --organization="${ORGANIZATION}" --name='Containers'
+
+# Create a container from repo
 hammer docker container create \
---organizations 'MATRIX Labs' \
---locations 'Laptop Lab' \
- --compute-resource rh7ose01.matrix.lab \
---repository-name rhel \
+--organizations "${ORGANIZATION}" \
+--locations ${LOCATION}" \
+ --compute-resource ${SATELLITE}.${DOMAIN} \
+--repository-name "Red Hat Containers" \
 --tag latest \
 --name test \
 --command bash
 
-# Create Content View, Add Repo and Publish
-hammer content-view create --organization="${ORGANIZATION}" --name "Production Registry" --description "Production Registry"
-hammer content-view add-repository --organization="${ORGANIZATION}" --name "Production Registry" --repository "rhel" --product "Containers"
-hammer content-view publish --organization="${ORGANIZATION}" --name "Production Registry"
-
-#Promote Content View
-hammer content-view version promote --organization="${ORGANIZATION}" --to-lifecycle-environment Development --content-view "Production Registry" --async
-hammer content-view version promote --organization="${ORGANIZATION}" --to-lifecycle-environment QA --content-view "Production Registry" --async
-hammer content-view version promote --organization="${ORGANIZATION}" --to-lifecycle-environment Production --content-view "Production Registry" --async
-
+# Add a Compute Resource
+hammer compute-resource create --organizations --organization "${ORGANIZATION}"  --location "${LOCATION}" --provider docker --name docker-node.${DOMAIN} --url http://docker-node.${DOMAIN}:4243
 
 ##################################
 ##   Red Hat IDM Integration
@@ -405,3 +406,10 @@ hammer content-view version promote --organization="${ORGANIZATION}" --to-lifecy
 yum -y install ipa-client foreman-proxy ipa-admintools
 ipa-client-install --password='Passw0rd'
 foreman-prepare-realm admin 
+
+## HELPFUL LINKS
+https://${SATELLITE}.${DOMAIN}/foreman_tasks/task?search=state+=+paused
+https://${SATELLITE}.${DOMAIN}/foreman_tasks/tasks?search=state+=+planned
+https://${SATELLITE}.${DOMAIN}/foreman_tasks/tasks?search=result+=+pending
+
+

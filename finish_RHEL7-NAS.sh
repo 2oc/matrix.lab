@@ -1,16 +1,12 @@
 #!/bin/bash
 
-mv /home/morpheus /var/tmp
-umount /home
-lvremove -f /dev/mapper/rhel-home
-lvcreate -y -L1g -nrhel-home rhel
-mkfs.xfs /dev/rhel/rhel-home
-mount -a
+DEV="/dev/sda" 
+LASTPART=`parted -s ${DEV} print | awk '{ print $1 }' | grep -v ^$ | tail -1`
+LASTPART=$(($LASTPART + 1))
+parted -s ${DEV}  mkpart pri ext3 `parted -s ${DEV} print free | grep "Free Space" | tail -1 | awk '{ print $1 }'` 100% set ${LASTPART} lvm on
 
 VIRT=0
 subscription-manager register --auto-attach  --username=${RHNUSER} --password='${RHNPASSWD}'
-
-subscription-manager repos --disable "*"
 uname -a | grep el6 && RELEASE="6Server" || RELEASE="7Server"
 subscription-manager release --set=$RELEASE
 subscription-manager repos --disable=* --enable rhel-7-server-rpms 
@@ -42,23 +38,35 @@ exit 0
 #########################
 #  NFS SERVER
 yum -y install nfs-utils
-firewall-cmd --permanent --zone=public --add-service=nfs
-firewall-cmd --reload
-lvcreate -L10g -nlv_isos rhel
-mkfs.xfs /dev/mapper/rhel-lv_isos
-mkdir -p /export/nfs/isos/vol0
-echo "/dev/mapper/rhel-lv_isos /export/nfs/isos/vol0 xfs defaults 0 0" >> /etc/fstab
-mount -a
-useradd -u108 -g108 -c "oVirt Manager" -d /var/lib/ovirt-engine -s /sbin/nologin ovirt
-chown ovirt:ovirt /export/nfs/isos/vol0
-SVCS="rpcbind nfs-server nfs-lock nfs-idmap"
-for SVC in $SVCS 
-do 
+SVCS="rpcbind nfs-server" 
+for SVC in $SVCS
+do
   echo "# NOTE: Starting $SVC"
   systemctl enable $SVC
   systemctl start $SVC
 done
-echo "/export/nfs/isos/vol0 10.10.10.10(rw,no_root_squash) 10.10.10.11(rw,no_root_squash) 10.10.10.12(rw,no_root_squash)" >> /etc/exports
+firewall-cmd --permanent --zone=public --add-service=nfs
+firewall-cmd --reload
+
+# Docker Registry NFS share
+lvcreate -nlv_registry -L20g vg_exports
+mkfs.xfs /dev/mapper/vg_exports-lv_registry
+mkdir -p /exports/nfs/registry
+echo "/dev/mapper/vg_exports-lv_registry /exports/nfs/registry xfs defaults 1 2" >> /etc/fstab
+echo "/exports/nfs/registry 10.10.10.*(rw,no_root_squash)" >> /etc/exports
+chown nfsnobody:nfsnobody /exports/nfs/registry
+
+
+exit 0
+###### ISOS 
+lvcreate -L10g -nlv_isos vg_exports 
+mkfs.xfs /dev/mapper/vg_exports-lv_isos
+mkdir -p /exports/nfs/isos/vol0
+echo "/dev/mapper/rhel-lv_isos /exports/nfs/isos/vol0 xfs defaults 0 0" >> /etc/fstab
+mount -a
+useradd -u108 -g108 -c "oVirt Manager" -d /var/lib/ovirt-engine -s /sbin/nologin ovirt
+chown ovirt:ovirt /exports/nfs/isos/vol0
+echo "/exports/nfs/isos/vol0 10.10.10.10(rw,no_root_squash) 10.10.10.11(rw,no_root_squash) 10.10.10.12(rw,no_root_squash)" >> /etc/exports
 exportfs -a
 
 exit 0
