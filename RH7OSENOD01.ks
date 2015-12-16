@@ -1,6 +1,7 @@
 #version=RHEL7
 # System authorization information
 auth --enableshadow --passalgo=sha512
+cmdline
 
 # Use network installation
 #url --url="http://10.10.10.10/RHEL-7.1-x86_64/"
