@@ -90,7 +90,7 @@ esac
 # Need to create a way to deal with more than one "build-time" disk
 case $NUMDISK in
   2)
-virt-install --name ${GUESTNAME} --hvm --connect qemu:///system \
+virt-install --noautoconnect --name ${GUESTNAME} --hvm --connect qemu:///system \
   --description "${GUESTNAME}" --virt-type=kvm \
   --network=bridge:brkvm --vcpus=${NUMCPUS} --ram=${MEM} \
   --disk /var/lib/libvirt/images/${GUESTNAME}/${GUESTNAME}-0.img,device=disk,bus=virtio,format=qcow2 \
@@ -100,7 +100,7 @@ virt-install --name ${GUESTNAME} --hvm --connect qemu:///system \
   -x "ks=http://${WEBSERVER}/${GUESTNAME}.ks"
   ;;
   *)
-virt-install --name ${GUESTNAME} --hvm --connect qemu:///system \
+virt-install --noautoconnect --name ${GUESTNAME} --hvm --connect qemu:///system \
   --description "${GUESTNAME}" --virt-type=kvm \
   --network=bridge:brkvm --vcpus=${NUMCPUS} --ram=${MEM} \
   --disk /var/lib/libvirt/images/${GUESTNAME}/${GUESTNAME}-0.img,device=disk,bus=virtio,format=qcow2 \
