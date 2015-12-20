@@ -1,8 +1,8 @@
 #!/bin/bash
 
 #### THIS IS CLOSE TO BEING DONE, BUT - IF YOU HAPPEN TO USE THIS
-####  RUN THE STEPS MANUALLY
-####  I execute this script on a single node, one of the masters.  RH7OSEMST01 to be exact.
+####   RUN THE STEPS MANUALLY
+#### I execute this script on a single node, one of the masters.  RH7OSEMST01 to be exact.
 ####   Technically, the ansible playbook can be run anywhere and pointed at the nodes.
 
 HAMSTR=1
@@ -194,9 +194,15 @@ sed -i -e "s/subdomain:  \"\"/subdomain:  \"cloudapps.\${DOMAIN}\"/g" /etc/origi
 systemctl restart atomic-openshift-master-api
 EOF
 
+for MASTER in `grep osemst hosts`
+do 
+  scp add_http_auth.sh ${MASTER}:
+  ssh ${MASTER} "sh ./add_http_auth.sh"
+done
+
 echo "echo \"oc login -u \`whoami\` -p 'Passw0rd' --insecure-skip-tls-verify --server=https://openshift-cluster.${DOMAIN}:8443\" " >> ~morpheus/.bashrc
 
-for NODE in  `cat hosts | egrep 'osenod|oseinf'`; do ssh $NODE "setsebool -P virt_use_nfs=true"; done
+for NODE in  `cat hosts | egrep 'osemst|osenod|oseinf'`; do ssh $NODE "setsebool -P virt_use_nfs=true"; done
 
 exit 0
 
