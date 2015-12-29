@@ -25,7 +25,8 @@ subscription-manager clean
 yum -y localinstall http://${SATELLITE}.${DOMAIN}/pub/katello-ca-consumer-latest.noarch.rpm
 case `hostname -s` in 
   rh7ose*)
-    subscription-manager register --activationkey='OSEv3-Library' --org="${ORGANIZATION}" --release=7Server --force
+    # Lock my OSE hosts at 7.2
+    subscription-manager register --activationkey='OSEv3-Library' --org="${ORGANIZATION}" --release=7.2 --force
   ;;
   *)
     echo "NOTE: using username/password for Activation"
