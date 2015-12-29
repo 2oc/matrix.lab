@@ -11,11 +11,12 @@ EDITOR=vim
 VISUAL=vim
 HOSTNAME=`hostname | cut -f1 -d.`
 GIT_EDTIOR=vim
+TITLE="`/usr/bin/whoami`@`hostname -s`"
+HISTCONTROL=ignoredups
 
 PATH=$PATH:/usr/bin/:/sbin:/usr/sbin
 PATH=$PATH:$HOME/.local/bin:$HOME/bin
-#PATH=$PATH:/usr/openv/netbackup/bin:/usr/openv/netbackup/bin/admincmd
-#PATH=$PATH:/opt/VRTS/bin:/opt/VRTSperl/bin:/opt/VRTSvcs/bin
+
 case `uname` in
  SunOS)
    PS1="`/usr/ucb/whoami`@${HOSTNAME} $ "

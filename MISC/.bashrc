@@ -6,16 +6,17 @@ if [ -f /etc/bashrc ]; then
 fi
 
 # User specific aliases and functions
-function set_title {
-  title=$1;
-  echo -e "\033];${title}\007";
-}
-
-# replaced the following by using ~/.ssh/config
-#alias ssh="ssh -o TCPKeepAlive=yes -o ServerAliveInterval=50 -XCA ${1}"
 alias vms="sudo virsh list --inactive --all"
 alias vv="sudo virt-viewer ${1}"
 
 alias doover='/usr/bin/sudo $(history -p \!\!)' 
 alias please='/usr/bin/sudo $(history -p !!)'
-alias itunes='/usr/bin/vncviewer cypher.matrix.private'
+alias butwhy='/usr/bin/systemctl status $_ '
+alias itunes='/usr/bin/vncviewer --CompressLevel=6 cypher.matrix.private'
+
+alias aplogin='oc login -u oseuser -p 'Passw0rd' --insecure-skip-tls-verify --server=https://openshift-cluster.aperture.lab.:8443'
+#alias mtlogin='oc login -u morpheus -p 'Passw0rd' --insecure-skip-tls-verify --server=https://openshift-cluster.matrix.lab.:8443'
+alias mtlogin='oc login -u morpheus -p 'Passw0rd' --insecure-skip-tls-verify --server=https://rh7osemst01.matrix.lab.:8443'
+
+# Use vi as the EDITOR
+set -o vi

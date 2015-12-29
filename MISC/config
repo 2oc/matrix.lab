@@ -1,0 +1,19 @@
+Host *
+    ForwardX11 yes
+    Compression yes
+    TCPKeepAlive yes
+    ServerAliveInterval 60
+    ServerAliveCountMax 30
+    ForwardAgent yes
+    #ControlPath ~/.ssh/%l-master-%r@%h:%p
+    #ControlMaster auto
+    ConnectTimeout 2
+Host rh* pdrh* qarh* dvrh* RH* rhic-satellite rhic-satellite.iad.salab.redhat.com
+  user root
+Host casl-sat6-1.rhc-ose.labs.redhat.com casl-satellite-server.os1.phx2.redhat.com
+  user cloud-user
+Host rh7ose*
+  UserKnownHostsFile ~/.ssh/known_hosts-lab
+Host ciscoasa
+  user ciscoasa
+  KexAlgorithms +diffie-hellman-group1-sha1
