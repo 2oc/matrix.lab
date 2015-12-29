@@ -1,5 +1,6 @@
 DOMAIN=`hostname -d`
 CLOUDDOMAIN="cloudapps.${DOMAIN}"
+echo "$DOMAIN $CLOUDDOMAIN"
 
 ######################### ######################### #########################
 # Create Certificate for OSE Router(s)
@@ -39,7 +40,7 @@ oadm registry --create --service-account=registry \
 oc volume deploymentconfigs/docker-registry \
  --add --overwrite --name=registry-storage \
  --mount-path=/registry \
- --source='{"nfs": { "server": "192.168.122.1", "path":"/exports/nfs/registry"}}'
+ --source='{"nfs": { "server": "10.10.10.3", "path":"/exports/nfs/registry"}}'
 
 ###################### ###################### ######################
 # Secure the Registry 
