@@ -225,8 +225,15 @@ ipa dnszone-add cloudapps.matrix.lab --admin-email=root@matrix.lab --minimum=300
 ipa dnsrecord-add cloudapps.matrix.lab '*' --a-rec 192.168.122.135
 ipa dnsrecord-add cloudapps.matrix.lab '*' --a-rec 192.168.122.136
 ipa dnszone-mod --allow-transfer='10.10.10.0/24;127.0.0.1' matrix.lab
-
 }
+# This is to expose my lab to the real world...
+IPADDR=`curl http://checkip.dyndns.org | cut -f2 -d\: |cut -f1 -d\< |sed 's/ //g'`
+ipa dnszone-add linuxrevolution.com --admin-email=root@linuxrevolution.com --minimum=3000 
+ipa dnsrecord-add linuxrevolution.com '*' --a-rec $IPADDR
+ipa dnszone-add cloudapps.linuxrevolution.com --admin-email=root@linuxrevolution.com --minimum=3000 
+ipa dnsrecord-add cloudapps.linuxrevolution.com '*' --a-rec $IPADDR
+
+
 
 # [root@rh6ns01 ~]# host -l matrix.lab | grep -v rh7idm | sed 's/.matrix.lab//g' | grep -v dhcp | awk '{ print "ipa dnsrecord-add matrix.lab "$1" --a-rec "$4 }'
 # [root@rh6ns01 ~]# host -l matrix.lab | egrep -v 'rh7idm|^mat' | sort -k4 | sed 's/10.10.10.//g' | grep -v dhcp | awk '{ print "ipa dnsrecord-add 10.10.10.in-addr.arpa "$4" --ptr-rec "$1"." }'
