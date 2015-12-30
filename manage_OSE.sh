@@ -1,7 +1,16 @@
 #!/bin/bash
 
 #  This is to manage KVM-based VMs.  Not inteneded for the RHEV VMs
+usage() {
+  echo "${0} [build|post|delete]"
+  exit 9
+}
 
+if [ $# -ne 1 ]
+then
+  echo "ERROR: wrong number of arguments"
+  usage
+fi
 delete_keys() {
   echo "NOTE: cleaning up keys"
   sed -i -e '/rh7ose.*.matrix/d' ~jradtke/.ssh/known_hosts-lab
@@ -31,11 +40,6 @@ build_VMs() {
     echo $HOST
     ./build_KVM.sh $HOST; sleep 180 
   done
-}
-
-usage() {
-  echo "${0} [post|delete|build]"
-  exit 9
 }
 
 case $1 in 
