@@ -1,5 +1,8 @@
 #!/bin/bash
 
+SATELLITE=rh7sat6
+DOMAIN=`hostname -d`
+
 #  This is to manage KVM-based VMs.  Not inteneded for the RHEV VMs
 usage() {
   echo "${0} [build|post|delete]"
@@ -15,6 +18,15 @@ delete_keys() {
   echo "NOTE: cleaning up keys"
   sed -i -e '/rh7ose.*.matrix/d' ~/.ssh/known_hosts-lab
   sed -i -e '/10.10.10./d' ~/.ssh/known_hosts-lab
+}
+
+remove_satellite() {
+#  for NODE in `hammer content-host list --organization=$ORGANIZATION | grep rh7ose | awk '{ print $1 }'`
+#  do
+#    hammer content-host delete --id=$NODE --organization=$ORGANIZATION
+#  done
+  # Temp work-around
+  ssh $SATELLITE "sh ./clean_up.sh"
 }
 
 install_keys() {
@@ -38,7 +50,7 @@ build_VMs() {
   for HOST in `grep -v \# hosts | grep -i rh7ose | cut -f1 -d\. | tr [a-z] [A-Z]`
   do 
     echo $HOST
-    ./build_KVM.sh $HOST; sleep 180 
+    ./build_KVM.sh $HOST; sleep 120 
   done
 }
 
