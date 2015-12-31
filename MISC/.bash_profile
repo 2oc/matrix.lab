@@ -5,6 +5,15 @@ if [ -f ~/.bashrc ]; then
 	. ~/.bashrc
 fi
 
+#  Source Secondary bash_profile(s)
+# I'm still working on the cleanest way to do this... source any "additional" profiles
+ls ~/.bash_profile_* 2>/dev/null 
+case $? in
+  0)
+    . ~/.bash_profile_*
+  ;;
+esac
+
 # User specific environment and startup programs
 TERM=vt100
 EDITOR=vim
