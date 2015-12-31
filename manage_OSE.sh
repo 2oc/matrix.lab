@@ -56,6 +56,9 @@ build_VMs() {
     ./build_KVM.sh $HOST; sleep 120 
   done
 }
+update_VMs(){
+  for VM in `/usr/bin/sudo virsh list --all | grep -i rh7ose | awk '{ print $2 }'`; do ssh $VM "yum -y update; shutdown now -r" ; done
+}
 
 distribute_keys(){
   for VM in `/usr/bin/sudo virsh list --all | grep -i rh7ose | awk '{ print $2 }'`; do ssh-copy-id $VM; done
@@ -80,6 +83,9 @@ case $1 in
       echo "# NOTE:  $HOST - post_install.sh"
       ssh $HOST "sh ./post_install.sh"
     done
+  ;;
+  update)
+    update_VMs
   ;;
   start)
     for VM in `/usr/bin/sudo virsh list --all | grep -i rh7ose | awk '{ print $2 }'`; do /usr/bin/sudo virsh start $VM; sleep 2; done
