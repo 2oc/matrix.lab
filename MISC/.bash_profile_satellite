@@ -1,0 +1,7 @@
+# Copy this to ~ 
+# Satellite Specific bits
+ORGANIZATION="MATRIXLABS"
+LOCATION="HomeLabs"
+SATELLITE="rh7sat6"
+DOMAIN="matrix.lab"
+export ORGANIZATION LOCATION SATELLITE DOMAIN
