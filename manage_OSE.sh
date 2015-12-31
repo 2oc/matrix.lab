@@ -2,10 +2,12 @@
 
 SATELLITE=rh7sat6
 DOMAIN=`hostname -d`
+# Passw0rd
 
 #  This is to manage KVM-based VMs.  Not inteneded for the RHEV VMs
 usage() {
-  echo "${0} [build|post|delete]"
+  echo "${0} [build|start|distributekeys|post]"
+  echo "${0} [stop|delete|deletekeys]"
   exit 9
 }
 
@@ -14,6 +16,7 @@ then
   echo "ERROR: wrong number of arguments"
   usage
 fi
+
 delete_keys() {
   echo "NOTE: cleaning up keys"
   sed -i -e '/rh7ose.*.matrix/d' ~/.ssh/known_hosts-lab
@@ -72,7 +75,7 @@ case $1 in
     distribute_keys
   ;;
   post)
-    for HOST in $HOSTS
+    for HOST in `/usr/bin/sudo virsh list --all | grep -i rh7ose | awk '{ print $2 }'`
     do
       echo "# NOTE:  $HOST - post_install.sh"
       ssh $HOST "sh ./post_install.sh"
