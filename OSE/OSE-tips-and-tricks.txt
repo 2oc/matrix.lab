@@ -30,7 +30,7 @@ systemctl restart openshift-master
 # DO NOT STOP DOCKER
 rm -rf /var/lib/docker/*
 REGISTRY="registry.access.redhat.com"; PTH="openshift3"
-REGISTRY="rh7sat6.aperature.lab"; PTH="openshift3"
+REGISTRY="rh7sat6.matrix.lab"; PTH="openshift3"
 IMAGES="ose-haproxy-router:v3.0.0.1
 ose-deployer:v3.0.0.1
 ose-sti-builder:v3.0.0.1
@@ -55,5 +55,5 @@ etcdctl -C \
    --cert-file=/etc/etcd/generated_certs/openshift-master-rh7osemst01.aperture.lab/master.etcd-client.crt \
    --key-file=/etc/etcd/generated_certs/openshift-master-rh7osemst01.aperture.lab//master.etcd-client.key cluster-health
 
-Passwd: r3dh4t1!
-
+# If you manage to log yourself out of the default project
+oc login -u system:admin -n default

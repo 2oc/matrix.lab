@@ -54,6 +54,10 @@ build_VMs() {
   done
 }
 
+distribute_keys(){
+  for VM in `/usr/bin/sudo virsh list --all | grep -i rh7ose | awk '{ print $2 }'`; do ssh-copy-id $VM; done
+} 
+
 case $1 in 
   delete)
     delete_VMs
@@ -64,6 +68,9 @@ case $1 in
   build)
     build_VMs
   ;;
+  distributekeys)
+    distribute_keys
+  ;;
   post)
     for HOST in $HOSTS
     do
@@ -72,7 +79,7 @@ case $1 in
     done
   ;;
   start)
-    for VM in `/usr/bin/sudo virsh list --all | grep -i rh7ose | awk '{ print $2 }'`; do /usr/bin/sudo virsh start $VM; done
+    for VM in `/usr/bin/sudo virsh list --all | grep -i rh7ose | awk '{ print $2 }'`; do /usr/bin/sudo virsh start $VM; sleep 2; done
   ;;
   stop)
     echo "NOTE: Stopping VMs" 
