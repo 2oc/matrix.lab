@@ -13,8 +13,8 @@ then
 fi
 delete_keys() {
   echo "NOTE: cleaning up keys"
-  sed -i -e '/rh7ose.*.matrix/d' ~jradtke/.ssh/known_hosts-lab
-  sed -i -e '/10.10.10./d' ~jradtke/.ssh/known_hosts-lab
+  sed -i -e '/rh7ose.*.matrix/d' ~/.ssh/known_hosts-lab
+  sed -i -e '/10.10.10./d' ~/.ssh/known_hosts-lab
 }
 
 install_keys() {
@@ -43,21 +43,21 @@ build_VMs() {
 }
 
 case $1 in 
-  post)
-    for HOST in $HOSTS
-    do 
-      echo "# NOTE:  $HOST - post_install.sh"
-      ssh $HOST "sh ./post_install.sh"
-    done
-  ;;
-  build)
-    build_VMs
+  delete)
+    delete_VMs
   ;;
   deletekeys)
     delete_keys
   ;;
-  delete)
-    delete_VMs
+  build)
+    build_VMs
+  ;;
+  post)
+    for HOST in $HOSTS
+    do
+      echo "# NOTE:  $HOST - post_install.sh"
+      ssh $HOST "sh ./post_install.sh"
+    done
   ;;
   start)
     for VM in `/usr/bin/sudo virsh list --all | grep -i rh7ose | awk '{ print $2 }'`; do /usr/bin/sudo virsh start $VM; done
