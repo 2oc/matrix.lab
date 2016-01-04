@@ -43,11 +43,11 @@ oc volume deploymentconfigs/docker-registry \
  --source='{"nfs": { "server": "10.10.10.3", "path":"/exports/nfs/registry"}}'
 
 ###################### ###################### ######################
-# Secure the Registry 
+# Expose/Secure the Registry 
 ###################### ###################### ######################
 REGIP=`oc get service docker-registry | grep docker-registry | awk '{ print $2 }'`
 CERTPATH=/etc/origin/master/
-EXTREGISTRY="registry.${CLOUDDOMAIN}"
+EXTREGISTRY="ose-registry.${CLOUDDOMAIN}"
 oadm ca create-server-cert --signer-cert=${CERTPATH}ca.crt \
   --signer-key=${CERTPATH}ca.key --signer-serial=${CERTPATH}ca.serial.txt \
   --hostnames="docker-registry.default.svc.cluster.local,${EXTREGISTRY},${REGIP}" \
@@ -63,6 +63,7 @@ oc env dc/docker-registry \
     REGISTRY_HTTP_TLS_CERTIFICATE=/etc/secrets/registry.crt \
     REGISTRY_HTTP_TLS_KEY=/etc/secrets/registry.key
 # wait until registry is redeployed (check oc get all)
+# watch -n5 "oc get all"
 sleep 10
 oc exec -i -t -p `oc get pods | grep ^docker-registry | awk '{ print $1 }' ` ls /etc/secrets
 # Confirm it is secure
@@ -105,15 +106,15 @@ oadm router harouter --stats-password='Passw0rd' --replicas=2 \
 ######################### ######################### #########################
 # Expose Registry
 ######################### ######################### #########################
-EXTREGHOSTNAME="registry.${DOMAIN}"
-mkdir ~/Projects/Registry; cd $_
+EXTREGISTRY="ose-registry.${CLOUDDOMAIN}"
+mkdir -p ~/Projects/Registry; cd $_
 cat << EOF > expose-registry.json
 apiVersion: v1
 kind: Route
 metadata:
   name: registry
 spec:
-  host: $EXTREGHOSTNAME
+  host: $EXTREGISTRY
   to:
     kind: Service
     name: docker-registry 
@@ -121,11 +122,11 @@ spec:
     termination: passthrough
 EOF
 CERTPATH=/etc/origin/master/
-mkdir /etc/docker/certs.d/${EXTREGHOSTNAME}; chmod 755 $_
-cp ${CERTPATH}registry.crt ${CERTPATH}registry.key /etc/docker/certs.d/${EXTREGHOSTNAME}
+mkdir /etc/docker/certs.d/${EXTREGISTRY}; chmod 755 $_
+cp ${CERTPATH}registry.crt ${CERTPATH}registry.key /etc/docker/certs.d/${EXTREGISTRY}
 for NODE in `egrep 'oseinf|osenod|osemst' ./hosts`
 do
-  rsync -tugrpolvv /etc/docker/certs.d/${EXTREGHOSTNAME} ${NODE}:/etc/docker/certs.d/
+  rsync -tugrpolvv /etc/docker/certs.d/${EXTREGISTRY} ${NODE}:/etc/docker/certs.d/
   ssh ${NODE} "systemctl daemon-reload; systemctl restart docker"
 done
 
@@ -168,13 +169,13 @@ cat pv{1..2} | oc create -f - -n default
 MYPROJ='hello-s2i'
 oadm new-project ${MYPROJ} --display-name="Hello Source2Image" \
     --description="This project is for Source to Image builds" \
-      --node-selector='region=primary' --admin=oseuser
+      --node-selector='region=primary' --admin=morpheus
 # Since I have now "plumbed my ENV to AD"....
-#oc policy add-role-to-user admin 'CN=OSE User,CN=Users,DC=aperture,DC=lab' -n hello-s2i
-oc policy add-role-to-user admin 'oseuser' -n hello-s2i
+#oc policy add-role-to-user admin 'CN=OSE User,CN=Users,DC=matrix,DC=lab' -n hello-s2i
+oc policy add-role-to-user admin 'morpheus' -n hello-s2i
 
-su - oseuser
-oc login -u oseuser -p Passw0rd --insecure-skip-tls-verify --server=https://openshift-cluster.${DOMAIN}:8443
+su - morpheus
+oc login -u morpheus -p Passw0rd --insecure-skip-tls-verify --server=https://openshift-cluster.${DOMAIN}:8443
 MYPROJ='hello-s2i'
 mkdir -p ~/Projects/${MYPROJ}; cd $_
 oc project ${MYPROJ}
@@ -185,10 +186,10 @@ oc build-logs `oc get builds | grep sinatra | awk '{ print $1 }'`
 curl http://`oc get services | grep sinatra | awk '{ print $2":"$4 }' | cut -f1 -d\/`
 
 oc expose service simple-openshift-sinatra \
-  --hostname=mysinatra.cloudapps.aperture.lab
+  --hostname=mysinatra.cloudapps.matrix.lab
 # If you want to manage the route, run...
 # oc edit route 
-# http://mysinatra.cloudapps.aperture.lab/
+# http://mysinatra.cloudapps.matrix.lab/
 
 # IF... you want to use ssh-keys and/or a specific .gitconfig
 # JUST .gitconfig
@@ -225,9 +226,9 @@ oc edit bc
 MYPROJ="ruby-keypair"
 oadm new-project ${MYPROJ} --display-name="Demo KeyPair - Ruby Source2Image" \
     --description="OSE Origin Ruby Source to Image example" \
-      --node-selector='region=primary' --admin=oseuser
+      --node-selector='region=primary' --admin=morpheus
 
-su - oseuser
+su - morpheus
 MYPROJ="ruby-keypair"
 oc project ${MYPROJ}
 mkdir ~/Templates; cd $_
@@ -236,18 +237,18 @@ oc create -f application-template-stibuild.json -n ${MYPROJ}
 mkdir -p ~/Projects/${MYPROJ}; cd $_
 
 oc process ruby-helloworld-sample -n ${MYPROJ} -o json > ruby-helloworld-sample
-sed -i -e 's/www.example.com/ruby-keypair.cloudapps.aperture.lab/g' ruby-helloworld-sample
+sed -i -e 's/www.example.com/ruby-keypair.cloudapps.matrix.lab/g' ruby-helloworld-sample
 oc create -f ruby-helloworld-sample
 # wait a tic... then go to...
-# https://ruby-keypair.cloudapps.aperture.lab:443/
+# https://ruby-keypair.cloudapps.matrix.lab:443/
 
 ######################### ######################### ######################### 
 # PROJECT RESOURCE MANAGEMENT
 ######################### ######################### ######################### 
 oadm new-project resourcemanagement --display-name="Resources Management" \
     --description="resource management project" \
-    --admin=oseuser --node-selector='region=primary'
-oc policy add-role-to-user admin oseuser -n resourcemanagement
+    --admin=morpheus --node-selector='region=primary'
+oc policy add-role-to-user admin morpheus -n resourcemanagement
 
 # QUOTAS
 cat << EOF > quota.json
@@ -319,8 +320,8 @@ oc get quota -n resourcemanagement
 oc describe quota test-quota -n resourcemanagement
 oc describe limitranges limits -n resourcemanagement
 
-su - oseuser 
-oc login -u oseuser --insecure-skip-tls-verify --server=https://rh7osemst01.aperture.lab:8443
+su - morpheus 
+oc login -u morpheus --insecure-skip-tls-verify --server=https://rh7osemst01.matrix.lab:8443
 oc project resourcemanagement
 mkdir -p ~/proeject/resourcemanagement/; cd $_
 
@@ -379,7 +380,7 @@ oc create -f hello-pod.json -n resourcemanagement
 ######################
 oadm new-project ticketmonster --display-name="Ticketmonster" \
     --description='A demonstration of a Ticketmonster' \
-    --node-selector='region=primary' --admin=oseuser
+    --node-selector='region=primary' --admin=morpheus
 
 git clone https://github.com/jboss-developer/ticket-monster/
 
@@ -388,7 +389,7 @@ git clone https://github.com/jboss-developer/ticket-monster/
 ######################
 oadm new-project quickstart --display-name="Quickstart" \
     --description='A demonstration of a "quickstart/template"' \
-    --node-selector='region=primary' --admin=oseuser
+    --node-selector='region=primary' --admin=morpheus
 
 mkdir Templates; cd $_
 wget http://www.opentlc.com/download/ose_implementation/resources/Template_Example.json
@@ -400,8 +401,8 @@ oc create -f Template_Example.json -n openshift
 MYPROJ=wiring 
 oadm new-project $MYPROJ --display-name='Wiring' \
     --description='A demonstration of wiring components together' \
-    --node-selector='region=primary' --admin=oseuser
-su - oseuser
+    --node-selector='region=primary' --admin=morpheus
+su - morpheus
 mkdir -p Project/$MYPROJ; cd $_
 oc project $MYPROJ
 oc new-app -i openshift/ruby https://github.com/openshift/ruby-hello-world#beta4
@@ -412,7 +413,7 @@ oc env dc/ruby-hello-world MYSQL_USER=root MYSQL_PASSWORD=redhat MYSQL_DATABASE=
 oc env dc/ruby-hello-world --list
 oc expose service \
   --name=frontend-route ruby-hello-world \
-  --hostname="frontwire.cloudapps.aperture.lab"
+  --hostname="frontwire.cloudapps.matrix.lab"
 oc get route
 mkdir -p Templates/; cd $_
 wget http://www.opentlc.com/download/ose_implementation/resources/mysql_template.json
@@ -430,9 +431,9 @@ oc get pod -t '{{range .items}}{{.metadata.name}} {{.spec.host}}{{"\n"}}{{end}}'
 # clone the repo
 # add a Dockerfile 
 oc new-project petstore --description="Petstore Example"
-oc policy add-role-to-user admin oseuser -n petstore 
-su - oseuser
-oc login -u oseuser --insecure-skip-tls-verify --server=https://rh7osemst01.aperture.lab:8443
+oc policy add-role-to-user admin morpheus -n petstore 
+su - morpheus
+oc login -u morpheus --insecure-skip-tls-verify --server=https://rh7osemst01.matrix.lab:8443
 oc project petstore 
 mkdir -p projects/petstore && cd $_
 git clone http://github.com/jradtke-rh/petstore.git
@@ -447,7 +448,7 @@ git commit -m "Adding Dockerfile" Dockerfile && git push
 cd -
 oc new-app https://github.com/jradtke-rh/petstore.git --name=petstore
 curl `oc get services | grep petstore | awk '{ print $2":"$4 }' | cut -f1 -d\/`
-oc expose service petstore --hostname=petstore.cloudapps.aperture.lab
+oc expose service petstore --hostname=petstore.cloudapps.matrix.lab
 oc exec -it -p petstore-1-build /bin/bash # This doesn't work since it is a privileged container, or something...
 
 ######################

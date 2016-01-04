@@ -69,7 +69,13 @@ done
 # THIS SHOULD ONLY RUN ON THE MASTER
 # Temp work-around (there is a currently a version mismatch)
 # yum -y install git-1.8.3.1-5.el7
-yum -y install wget git net-tools bind-utils iptables-services bridge-utils python-virtualenv gcc
+
+for HOST in `cat hosts` 
+do  
+  echo "# Configuring: $HOST"
+  ssh $HOST "yum -y install net-tools bind-utils iptables-services bridge-utils python-virtualenv" 
+done 
+yum -y install wget git net-tools  python-virtualenv gcc
 
 #  Uncomment the following if you intend on having an insecure registry
 #sed -i -e "s/OPTIONS='--selinux-enabled'/OPTIONS='--selinux-enabled --insecure-registry 172.30.0.0\/16'/" /etc/sysconfig/docker
@@ -91,7 +97,6 @@ case $? in
     fi
   ;;
 esac
-yum -y install atomic-openshift-utils ansible
 
 # Configure Docker storage (only on Docker nodes, obviously...)
 # FIRST CREATE COMMAND FILES, THEN DISTRIBUTE THEM, THEN RUN THEM
@@ -156,6 +161,10 @@ EOF
 ######## METHOD 3.a #############
 #   you can either use the RPM included openshfit-ansible playbooks
 #   Or, download them from github
+#  If your host is sub'd to the OSE channels - otherwise, you need to get them using
+#     [root@rh7osemst01 tmp]# yum -y install --downloadonly --downloaddir=/var/tmp/ atomic-openshift-utils
+#     
+yum -y install atomic-openshift-utils ansible
 mv /etc/ansible/hosts /etc/ansible/hosts.orig
 
 # Update /etc/ansible/hosts with the appropriate topology 

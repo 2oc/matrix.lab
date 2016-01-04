@@ -57,3 +57,6 @@ etcdctl -C \
 
 # If you manage to log yourself out of the default project
 oc login -u system:admin -n default
+
+# Download OC
+https://access.redhat.com/downloads/content/290/ver=3.1/rhel---7/3.1.0.4/x86_64/product-software
