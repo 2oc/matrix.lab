@@ -63,15 +63,20 @@ oc volume deploymentconfigs/docker-registry \
 # Expose/Secure the Registry 
 ###################### ###################### ######################
 REGIP=`oc get service docker-registry | grep docker-registry | awk '{ print $2 }'`
-CERTPATH=/etc/origin/master/
+CERTPATH=/etc/origin/master
 EXTREGISTRY="ose-registry.${CLOUDDOMAIN}"
 # NOTE:  I may need/want to figure out how to add the external IPs to this command also
-oadm ca create-server-cert --signer-cert=${CERTPATH}ca.crt \
-  --signer-key=${CERTPATH}ca.key --signer-serial=${CERTPATH}ca.serial.txt \
+oadm ca create-server-cert --signer-cert=${CERTPATH}/ca.crt \
+  --signer-key=${CERTPATH}/ca.key --signer-serial=${CERTPATH}/ca.serial.txt \
   --hostnames="docker-registry.default.svc.cluster.local,${EXTREGISTRY},${REGIP}" \
-  --cert=${CERTPATH}registry.crt --key=${CERTPATH}registry.key
+  --cert=${CERTPATH}/registry.crt --key=${CERTPATH}/registry.key
+
+cat ${CERTPATH}/registry.crt ${CERTPATH}/registry.key > ${CERTPATH}/registry.pem
+
+# Display Cert content
+openssl x509 -in ${CERTPATH}/registry.pem -text
   
-oc secrets new registry-secret ${CERTPATH}registry.crt ${CERTPATH}registry.key
+oc secrets new registry-secret ${CERTPATH}/registry.crt ${CERTPATH}/registry.key
 oc secrets add serviceaccounts/default secrets/registry-secret
 oc volume dc/docker-registry --add --type=secret \
     --secret-name=registry-secret -m /etc/secrets
