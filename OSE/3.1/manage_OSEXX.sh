@@ -2,6 +2,23 @@ DOMAIN=`hostname -d`
 CLOUDDOMAIN="cloudapps.${DOMAIN}"
 echo "$DOMAIN $CLOUDDOMAIN"
 
+# NOTE:  This is basically intended to be run on rh7osemst01 (with the resultant 
+#          updates to be distributed to other master nodes, and then the OSE service
+#          restarted.
+
+######################### ######################### #########################
+# Customize Login Page (webUI)
+######################### ######################### #########################
+oadm create-login-template > /etc/origin/master/login-template.html
+# I'm not smart enough to script this
+#  cp /etc/origin/master/master-config.yaml /etc/origin/master/master-config.yaml-`date +%F`
+# vi /etc/origin/master/master-config.yaml
+#oauthConfig:
+#  ...
+#  templates:
+#    login: /etc/origin/master/login-template.html
+# for NODE in `grep rh7osemst hosts | grep -v mst01`; do scp /etc/origin/master/login-template.html $NODE:/etc/origin/master/login-template.html; done
+
 ######################### ######################### #########################
 # Create Certificate for OSE Router(s)
 ######################### ######################### #########################
@@ -48,6 +65,7 @@ oc volume deploymentconfigs/docker-registry \
 REGIP=`oc get service docker-registry | grep docker-registry | awk '{ print $2 }'`
 CERTPATH=/etc/origin/master/
 EXTREGISTRY="ose-registry.${CLOUDDOMAIN}"
+# NOTE:  I may need/want to figure out how to add the external IPs to this command also
 oadm ca create-server-cert --signer-cert=${CERTPATH}ca.crt \
   --signer-key=${CERTPATH}ca.key --signer-serial=${CERTPATH}ca.serial.txt \
   --hostnames="docker-registry.default.svc.cluster.local,${EXTREGISTRY},${REGIP}" \
