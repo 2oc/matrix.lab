@@ -67,6 +67,7 @@ distribute_keys(){
 case $1 in 
   delete)
     delete_VMs
+    virsh list --all
   ;;
   deletekeys)
     delete_keys
