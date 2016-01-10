@@ -144,6 +144,8 @@ spec:
   tls:
     termination: passthrough
 EOF
+oc create -f ./expose-registry.json
+
 CERTPATH=/etc/origin/master/
 mkdir /etc/docker/certs.d/${EXTREGISTRY}; chmod 755 $_
 cp ${CERTPATH}registry.crt ${CERTPATH}registry.key /etc/docker/certs.d/${EXTREGISTRY}
