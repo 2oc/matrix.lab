@@ -2,13 +2,43 @@
 
 #### THIS IS CLOSE TO BEING DONE, BUT - IF YOU HAPPEN TO USE THIS
 ####   RUN THE STEPS MANUALLY
-#### I execute this script on a single node, one of the masters.  RH7OSEMST01 to be exact.
-####   Technically, the ansible playbook can be run anywhere and pointed at the nodes.
+#### Technically, the ansible playbook can be run anywhere and pointed at the nodes.
+#### I have found that you should likely run this from a RHEL host which has access 
+####   to the OSE channels
+
+#### NOTE:  You need to configure your ~/.ssh/config file as follows 
+# Host rh7ose*  RH7OSE*
+#     user root
 
 HAMSTR=1
 OSEVERSION=3.1
 
-DOMAIN=`hostname -d`
+case `lsb_release -i | awk '{ print $3 }'` in 
+  Fedora)
+    YUMCOMMAND="sudo dnf"
+  ;;
+  *)
+    YUMCOMMAND="sudo yum"
+  ;;
+esac
+    
+while getopts d: OPT
+do  
+  case $OPT in
+    d)
+       DOMAIN=$OPTARG
+    ;;
+    \?)
+      echo -e \\n"Option $OPT not allowed"
+    ;;
+  esac
+done
+shift $((OPTIND-1)) 
+
+if [ -z $DOMAIN ]; then DOMAIN=`hostname -d`; fi
+
+echo "DOMAIN: $DOMAIN"
+
 case $DOMAIN in 
   'matrix.lab')
     WEBREPO=10.10.10.10
@@ -38,18 +68,17 @@ rh7osenod03.${DOMAIN}
 rh7osenod04.${DOMAIN}
 EOF
 
-#host -l ${DOMAIN} | grep ose | awk  '{ print $4" "$1" "$1 }' | sed 's/.matrix.lab$//g' >> /etc/hosts
-
 # Passw0rd
 # Distribute Keys to ALL the OSe nodes (master, nodes, routers)
-if [ ! -f ~/.ssh/id_rsa.pub ]; then echo | ssh-keygen -trsa -b2048 -N ''; fi
+#if [ ! -f ~/.ssh/id_rsa.pub ]; then echo | ssh-keygen -trsa -b2048 -N ''; fi
+rm ~/.ssh/known_hosts-lab
 for HOST in `cat ./hosts`
 do
   ssh-copy-id -i ~/.ssh/id_rsa -oStrictHostKeyChecking=no $HOST
 done
 for HOST in `cat ./hosts`
 do
-  ssh $HOST "hostname; uptime"
+  ssh -q $HOST "hostname; uptime"
 done
 for HOST in `cat hosts`
 do
@@ -66,21 +95,20 @@ do
   echo 
 done
 
-# THIS SHOULD ONLY RUN ON THE MASTER
-# Temp work-around (there is a currently a version mismatch)
-# yum -y install git-1.8.3.1-5.el7
+# The following will depend on whether you are running Fedora or RHEL (I assume)
+# code this to figure out what you are running, what command to run and what packages it needs
+$YUMCOMMAND -y install wget git net-tools python-virtualenv gcc ansible
 
 for HOST in `cat hosts` 
 do  
   echo "# Configuring: $HOST"
   ssh $HOST "yum -y install net-tools bind-utils iptables-services bridge-utils python-virtualenv" 
 done 
-yum -y install wget git net-tools  python-virtualenv gcc
 
 #  Uncomment the following if you intend on having an insecure registry
 #sed -i -e "s/OPTIONS='--selinux-enabled'/OPTIONS='--selinux-enabled --insecure-registry 172.30.0.0\/16'/" /etc/sysconfig/docker
 #  Add EPEL 
-yum repolist | grep -i epel
+$YUMCOMMAND repolist | grep -i epel
 case $? in 
   0)
     echo "NOTE:  EPEL is already present"
@@ -127,13 +155,14 @@ do
 done
 for HOST in `egrep 'oseinf|osenod|osemst' hosts`
 do
-  ssh ${HOST} "hostname; systemctl status docker | grep 'docker.service' -A3"
+  ssh -q ${HOST} "hostname; systemctl status docker | grep 'docker.service' -A3" 
   #ssh ${HOST} "hostname; docker info"
+  echo "# *****************************"
 done
 
 # Since host keys seemed to hose people up
-if [ -f ~/.ssh/config ]; then mv ~/.ssh/config ~/.ssh/config-`date +%F`; fi
-cat << EOF > ~/.ssh/config
+if [ -f ~/.ssh/config ]; then cp ~/.ssh/config ~/.ssh/config-`date +%F`; fi
+cat << EOF >> ~/.ssh/config
 host *
   StrictHostKeyChecking no
 EOF
@@ -164,20 +193,25 @@ EOF
 #  If your host is sub'd to the OSE channels - otherwise, you need to get them using
 #     [root@rh7osemst01 tmp]# yum -y install --downloadonly --downloaddir=/var/tmp/ atomic-openshift-utils
 #     
-yum -y install atomic-openshift-utils ansible
+$YUMCOMMAND -y install atomic-openshift-utils 
+$YUMCOMMAND -y install ansible
 mv /etc/ansible/hosts /etc/ansible/hosts.orig
 
 # Update /etc/ansible/hosts with the appropriate topology 
 cd /usr/share/ansible/openshift-ansible
-ansible-playbook ./playbooks/byo/config.yml
+PATH_TO_INVENTORY_FILE=./ansible_hosts
+ansible-playbook ./playbooks/byo/config.yml ${PATH_TO_INVENTORY_FILE}
 
 ######## METHOD 3.b #############
-#cd
-#git clone https://github.com/openshift/openshift-ansible
-#cd openshift-ansible
-#mv /etc/ansible/hosts /etc/ansible/hosts.orig
-#for HOST in `grep -i rh7osemst ~/hosts`; do ssh $HOST "subscription-manager repos --enable=rhel-ha-for-rhel-7-server-rpms"; done
-#ansible-playbook ~/openshift-ansible/playbooks/byo/config.yml
+# sudo mkdir /home/Projects/; cd $_
+# sudo chown `whoami` /home/Projects
+# git clone https://github.com/openshift/openshift-ansible
+# cd openshift-ansible
+# for HOST in `grep -i rh7osemst ~/hosts`; do ssh $HOST "subscription-manager repos --enable=rhel-ha-for-rhel-7-server-rpms"; done
+fi [ ! -f ${PATH_TO_INVENTORY_FILE} ]; then echo "Ansible Hosts file not found"; exit 9; fi
+
+# ansible-playbook ./playbooks/byo/config.yml ${PATH_TO_INVENTORY_FILE}
+
 
    ###########################################################
 #################### END OF METHOD 3 ############################

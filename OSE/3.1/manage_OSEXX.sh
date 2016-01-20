@@ -46,12 +46,7 @@ oc volume dc/docker-registry --add --overwrite -t persistentVolumeClaim \
   --claim-name=registry-claim --name=registryvol
 
 ##   Method 2 - persistent w/NFS
-oadm registry --create --service-account=registry \
-    --config=/etc/origin/master/admin.kubeconfig \
-    --credentials=/etc/origin/master/openshift-registry.kubeconfig \
-    --images='registry.access.redhat.com/openshift3/ose-${component}:${version}' \
-    --selector='region=infra'
-
+#  Add the NFS volume
 # Clean out the existing NFS share... on NFS server
 # rm -rf /exports/nfs/pvs/registry/* 
 oc volume deploymentconfigs/docker-registry \
