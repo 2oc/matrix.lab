@@ -1,0 +1,43 @@
+# https://access.redhat.com/solutions/1257153
+yum -y install --enablerepo=rhel-7-server-optional-rpms NetworkManager-config-routing-rules
+systemctl enable NetworkManager-dispatcher.service
+systemctl start NetworkManager-dispatcher.service
+
+# RH7OSEINF01
+cat << EOF > /etc/sysconfig/network-scripts/rule-eth0
+iif eth0 table 1
+from 10.10.10.135 table 1
+EOF
+cat << EOF > /etc/sysconfig/network-scripts/rule-eth1
+iif eth1 table 2
+from 172.16.0.135 table 2
+EOF
+
+cat << EOF > /etc/sysconfig/network-scripts/route-eth0
+10.10.10.0/24 dev eth0 table 1
+default via 10.10.10.1 dev eth0 table 1
+EOF
+cat << EOF > /etc/sysconfig/network-scripts/route-eth1
+172.16.0.0/24 dev eth1 table 2
+default via 172.16.0.1 dev eth1 table 2
+EOF
+
+# RH7OSEINF02
+cat << EOF > /etc/sysconfig/network-scripts/rule-eth0
+iif eth0 table 1
+from 10.10.10.136 table 1
+EOF
+cat << EOF > /etc/sysconfig/network-scripts/rule-eth1
+iif eth1 table 2
+from 172.16.0.136 table 2
+EOF
+
+cat << EOF > /etc/sysconfig/network-scripts/route-eth0
+10.10.10.0/24 dev eth0 table 1
+default via 10.10.10.1 dev eth0 table 1
+EOF
+cat << EOF > /etc/sysconfig/network-scripts/route-eth1
+172.16.0.0/24 dev eth1 table 2
+default via 172.16.0.1 dev eth1 table 2
+EOF
+
