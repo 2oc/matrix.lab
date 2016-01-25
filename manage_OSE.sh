@@ -6,8 +6,10 @@ DOMAIN=`hostname -d`
 
 #  This is to manage KVM-based VMs.  Not inteneded for the RHEV VMs
 usage() {
+  echo "##   BUILD"
   echo "${0} [build|start|distributekeys|post]"
-  echo "${0} [stop|delete|deletekeys]"
+  echo "## TEARDOWN"
+  echo "${0} [stop|delete|deletekeys|removesatellite]"
   exit 9
 }
 
@@ -32,13 +34,6 @@ remove_satellite() {
   ssh $SATELLITE "sh ./clean_up.sh"
 }
 
-install_keys() {
-for HOST in `sudo virsh list --all | grep -i rh7ose | awk '{ print $2 }'`
-    do
-      ssh-copy-id -oStrictHostKeyChecking=no -i ~jradtke/.ssh/id_rsa.pub ${HOST}.${DOMAIN}
-    done
-}
-
 delete_VMs() {
   for VM in `sudo virsh list --all | grep -i rh7ose | awk '{ print $2 }'`
   do
@@ -61,10 +56,15 @@ update_VMs(){
 }
 
 distribute_keys(){
+  echo "Passw0rd"
   for VM in `/usr/bin/sudo virsh list --all | grep -i rh7ose | awk '{ print $2 }'`; do ssh-copy-id -oStrictHostKeyChecking=no $VM; done
+  for VM in `/usr/bin/sudo virsh list --all | grep -i rh7ose | awk '{ print $2 }'`; do ssh-copy-id $VM.${DOMAIN}; done
 } 
 
 case $1 in 
+  removesatellite)
+    remove_satellite
+  ;;
   delete)
     delete_VMs
     virsh list --all
