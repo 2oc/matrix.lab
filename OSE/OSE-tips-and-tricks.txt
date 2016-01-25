@@ -20,7 +20,6 @@ journalctl -f -u openshift-node
     done
   done
 
-
 # Setting a default node (no idea why though?)
 sed -i 's/defaultNodeSelector: ""/defaultNodeSelector: "region=primary"' /etc/openshift/master/master-config.yaml
 systemctl restart openshift-master
@@ -60,3 +59,6 @@ oc login -u system:admin -n default
 
 # Download OC
 https://access.redhat.com/downloads/content/290/ver=3.1/rhel---7/3.1.0.4/x86_64/product-software
+
+# Test whether registry is available
+curl -vk 172.30.211.112:5000/v2

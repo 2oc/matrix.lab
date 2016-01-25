@@ -61,7 +61,7 @@ update_VMs(){
 }
 
 distribute_keys(){
-  for VM in `/usr/bin/sudo virsh list --all | grep -i rh7ose | awk '{ print $2 }'`; do ssh-copy-id $VM; done
+  for VM in `/usr/bin/sudo virsh list --all | grep -i rh7ose | awk '{ print $2 }'`; do ssh-copy-id -oStrictHostKeyChecking=no $VM; done
 } 
 
 case $1 in 

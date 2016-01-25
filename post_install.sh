@@ -30,8 +30,8 @@ case `hostname -s` in
   ;;
   *)
     echo "NOTE: using username/password for Activation"
-    #subscription-manager register --org="${ORGANIZATION}" --environment="Library" --username='admin' --password='Passw0rd' --release=7Server  --auto-attach --force
-    #subscription-manager repos --enable rhel-7-server-rpms --enable rhel-7-server-rh-common-rpms --enable rhel-7-server-satellite-tools-6.1-rpms
+    subscription-manager register --org="${ORGANIZATION}" --environment="Library" --username='admin' --password='Passw0rd' --release=7Server  --auto-attach --force
+    subscription-manager repos --disable=* --enable rhel-7-server-rpms --enable rhel-7-server-rh-common-rpms --enable rhel-7-server-satellite-tools-6.1-rpms
   ;;
 esac
 
