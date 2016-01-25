@@ -45,7 +45,7 @@ oadm registry --create --service-account=registry \
 oc volume dc/docker-registry --add --overwrite -t persistentVolumeClaim \
   --claim-name=registry-claim --name=registryvol
 
-##   Method 2 - persistent w/NFS
+#   Method 1.b - persistent w/NFS
 #  Add the NFS volume
 # Clean out the existing NFS share... on NFS server
 # rm -rf /exports/nfs/pvs/registry/* 

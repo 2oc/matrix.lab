@@ -144,7 +144,7 @@ then
   systemctl status docker
 fi
 EOF
-for HOST in `egrep 'oseinf|osenod|osemst' hosts`
+for HOST in `egrep -i 'oseinf|osenod|osemst' hosts`
 do 
     echo "########## ############### ###############"
     ssh ${HOST} "yum -y install docker"
@@ -153,7 +153,7 @@ do
     ssh ${HOST} "sh ./my-docker-storage-setup"
     echo
 done
-for HOST in `egrep 'oseinf|osenod|osemst' hosts`
+for HOST in `egrep -i 'oseinf|osenod|osemst' hosts`
 do
   ssh -q ${HOST} "hostname; systemctl status docker | grep 'docker.service' -A3" 
   #ssh ${HOST} "hostname; docker info"
