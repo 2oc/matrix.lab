@@ -192,7 +192,7 @@ oadm new-project ${MYPROJ} --display-name="Hello Source2Image" \
       --node-selector='region=primary' --admin=morpheus
 # Since I have now "plumbed my ENV to AD"....
 #oc policy add-role-to-user admin 'CN=OSE User,CN=Users,DC=matrix,DC=lab' -n hello-s2i
-oc policy add-role-to-user admin 'morpheus' -n hello-s2i
+#oc policy add-role-to-user admin 'morpheus' -n hello-s2i
 
 su - morpheus
 oc login -u morpheus -p Passw0rd --insecure-skip-tls-verify --server=https://openshift-cluster.${DOMAIN}:8443
@@ -201,7 +201,7 @@ mkdir -p ~/Projects/${MYPROJ}; cd $_
 oc project ${MYPROJ}
 oc new-app https://github.com/openshift/simple-openshift-sinatra-STI.git -o json | tee ./simple-sinatra.json
 oc create -f ./simple-sinatra.json -n ${MYPROJ}
-oc build-logs `oc get builds | grep sinatra | awk '{ print $1 }'`
+oc build-logs `oc get builds | grep sinatra | head -1 | awk '{ print $1 }'`
 
 curl http://`oc get services | grep sinatra | awk '{ print $2":"$4 }' | cut -f1 -d\/`
 

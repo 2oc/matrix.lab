@@ -12,7 +12,8 @@ journalctl -f -u openshift-master
 journalctl -f -u openshift-node
 
 # REMOVE ALL REGISTRY ENTRIES
-  for resource in service deploymentConfig pod route serviceaccount secret rc; do
+  #for resource in service deploymentConfig pod route serviceaccount secret rc; do
+  for resource in service deploymentConfig pod route rc; do
     resource_names=$(oc get $resource | awk '/registry/ {print $1}')
     for name in ${resource_names/'\n'/ }; do
       echo "oc delete $resource $name"
@@ -62,3 +63,7 @@ https://access.redhat.com/downloads/content/290/ver=3.1/rhel---7/3.1.0.4/x86_64/
 
 # Test whether registry is available
 curl -vk 172.30.211.112:5000/v2
+
+# Using Curl (and faking the hostname header)
+curl -H 'Host: blah.fake.domain.com' http://10.10.10.135
+

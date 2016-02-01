@@ -85,6 +85,11 @@ do
   echo "Configuring: $HOST"
   ssh $HOST "sh ./post_install.sh"
 done
+for HOST in `cat hosts`
+do
+  echo "Configuring: $HOST"
+  ssh $HOST "yum -y update; shutdown now -r"
+done
 
 # CONFIGURE REPO(S) 
 for HOST in `cat hosts` 
@@ -211,7 +216,6 @@ ansible-playbook ./playbooks/byo/config.yml ${PATH_TO_INVENTORY_FILE}
 fi [ ! -f ${PATH_TO_INVENTORY_FILE} ]; then echo "Ansible Hosts file not found"; exit 9; fi
 
 # ansible-playbook ./playbooks/byo/config.yml ${PATH_TO_INVENTORY_FILE}
-
 
    ###########################################################
 #################### END OF METHOD 3 ############################
