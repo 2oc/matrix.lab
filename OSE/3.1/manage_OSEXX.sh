@@ -68,6 +68,8 @@ oadm ca create-server-cert --signer-cert=${CERTPATH}/ca.crt \
 
 cat ${CERTPATH}/registry.crt ${CERTPATH}/registry.key > ${CERTPATH}/registry.pem
 
+for MASTER in `grep mst hosts`; do scp ${CERTPATH}/registry.* ${MASTER}:${CERTPATH}/; done
+
 # Display Cert content
 openssl x509 -in ${CERTPATH}/registry.pem -text
   

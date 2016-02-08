@@ -67,3 +67,8 @@ curl -vk 172.30.211.112:5000/v2
 # Using Curl (and faking the hostname header)
 curl -H 'Host: blah.fake.domain.com' http://10.10.10.135
 
+# Grab the Cert
+$HOSTNAME=myhost.example.private
+echo | openssl s_client -connect ${HOSTNAME}:443 | sed -n /BEGIN/,/END/p > ${HOSTNAME}
+
+
