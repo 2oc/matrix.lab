@@ -4,20 +4,24 @@
 # Date:          2015-12-07
 # Purpose:       basic install of Satellite 6.1
 # Notes:         This script should provide basic functionality with the channels needed for OSE v3 
+#                This is not even a "beta" at this point.  There are several particulars that are clunky
+#                  i.e. downloading an ISO, statically defninig hostnames, etc...
+#                Review the script before executing it.
 
 
 ####################
 # Users (post-script)
 #  ORG: default
 #    GROUP: N/A 
-#    USER: admin / rhc053lAb (Satellite Administrator)
+#    USER: admin / <password> (Satellite Administrator)
 #  ORG: ${ORGANIZATION}
 #    GROUP: regusers
-#      USER: satmgr / rhc053lAb (Manager)
-#      USER: reguser / rhc053lAb (Edit Hosts)
+#      USER: satmgr / <password> (Manager)
+#      USER: reguser / <password> (Edit Hosts)
 ####################
 
 ISONAME=satellite-6.1.1-rhel-7-x86_64-dvd.iso
+PASSWORD=${PASSWORD}
 
 # I have found it easier to NOT use whitespace in the ORGANIZATION Variable
 cat << EOF >> ~/.bash_profile
@@ -30,16 +34,23 @@ export DOMAIN SATELLITE LOCATION ORGANIZATION
 EOF
 . ~/.bash_profile
 
-# You *should* not need to reregister the node 
-RHNUSER=""
-RHNPASSWD=""
+# /*
+# THIS SECTION NEEDS TO BE REVISITED.
+#   determine if host is subscribed already, if not check of login info... if blank, exit, else subscribe
+# You *should* not need to reregister the node - therefore leave these blank unless
+#   you discover you need to register your node.
+#RHNUSER=""
+#RHNPASSWD=""
 
-if [ -z ${RHNUSER} ] || [ -z ${RHNPASSWD} ]
-then
-  echo "ERROR:  Please update RHNUSER/RHNPASSWD Variables in the beginning of this script."
-  echo "        Script cannot proceed with empty values."
-  exit 9
-fi
+#if [ -z ${RHNUSER} ] || [ -z ${RHNPASSWD} ]
+#then
+#  echo "ERROR:  Please update RHNUSER/RHNPASSWD Variables in the beginning of this script."
+#  echo "        Script cannot proceed with empty values."
+#  exit 9
+#fi
+# You *should* not need to reregister the node 
+#subscription-manager register --auto-attach --username="$RHNUSER" --password="$RHNPASSWD"
+# */
 
 ####################################################################################
 ###  PRE
@@ -71,8 +82,6 @@ for DIR in `grep sat6 /etc/fstab | awk '{ print $2 }'`; do mkdir -p $DIR; mount 
 # If installing from CD (Sat 6.1), then manually import this key before starting...
 # rpm --import https://www.redhat.com/security/f21541eb.txt
 
-# You *should* not need to reregister the node 
-#subscription-manager register --auto-attach --username="$RHNUSER" --password="$RHNPASSWD"
 subscription-manager list --available --all > /var/tmp/subscription-manager_list--available--all.out
 # THE PROCESS TO RETRIEVE "POOL" MAY, OR MAY NOT WORK FOR YOU
 POOL=`awk '/Red Hat Satellite 6/ {flag=1;next} /Available:/{flag=0} flag {print}' /var/tmp/subscription-manager_list--available--all.out | grep "Pool ID:" | awk '{ print $3 }' |head -1`
@@ -146,7 +155,7 @@ EOF
 # Tune this for your own environment
 cat << EOF > katello-installer.cmd
 katello-installer --foreman-admin-username="admin" \
-  --foreman-admin-password="rhc053lAb" \
+  --foreman-admin-password="${PASSWORD}" \
   --foreman-authentication=true \
   --foreman-initial-organization="${ORGANIZATION}" \
   --foreman-initial-location="${LOCATION}" \
@@ -177,7 +186,7 @@ cat << EOF > ~/.hammer/cli_config.yml
     :enable_module: true
     :host: 'https://${SATELLITE}.${DOMAIN}'
     :username: 'admin'
-    :password: 'rhc053lAb'
+    :password: '${PASSWORD}'
     :organization: 'RHC-OSE'
 
     # Check API documentation cache status on each request
@@ -192,9 +201,9 @@ EOF
 
 ###################
 # --source-id=1 (should be INTERNAL)
-hammer user create --login satadmin --mail="satadmin@${SATELLITE}.${DOMAIN}" --firstname="Satellite" --lastname="Adminstrator" --password="rhc053lAb" --auth-source-id=1
+hammer user create --login satadmin --mail="satadmin@${SATELLITE}.${DOMAIN}" --firstname="Satellite" --lastname="Adminstrator" --password="${PASSWORD}" --auth-source-id=1
 hammer user add-role --login=satadmin --role-id=9
-hammer user create --login reguser --mail="reguser@${SATELLITE}.${DOMAIN}" --firstname="Registration" --lastname="User" --password="rhc053lAb" --auth-source-id=1
+hammer user create --login reguser --mail="reguser@${SATELLITE}.${DOMAIN}" --firstname="Registration" --lastname="User" --password="${PASSWORD}" --auth-source-id=1
 hammer user-group create --name="regusers" --role-ids=12 --users=satadmin,reguser
 
 #hammer organization create --name="${ORGANIZATION}" --label="${ORGANIZATION}"
@@ -374,11 +383,11 @@ hammer docker container create \
 ## If you don't know what this is, you probably should not proceed with any of this...
 
 yum -y install ipa-client foreman-proxy ipa-admintools
-ipa-client-install --password='rhc053lAb'
+ipa-client-install --password='${PASSWORD}'
 foreman-prepare-realm admin 
 
 ## HELPFUL LINKS
-https://rh7sat6.matrix.lab/foreman_tasks/task?search=state+=+paused
-https://rh7sat6.matrix.lab/foreman_tasks/tasks?search=state+=+planned
-https://rh7sat6.matrix.lab/foreman_tasks/tasks?search=result+=+pending
+https://<SATELLITE>.<DOMAIN>/foreman_tasks/task?search=state+=+paused
+https://<SATELLITE>.<DOMAIN>/foreman_tasks/tasks?search=state+=+planned
+https://<SATELLITE>.<DOMAIN>/foreman_tasks/tasks?search=result+=+pending
 
