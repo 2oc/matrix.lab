@@ -205,7 +205,7 @@ mv /etc/ansible/hosts /etc/ansible/hosts.orig
 # Update /etc/ansible/hosts with the appropriate topology 
 cd /usr/share/ansible/openshift-ansible
 PATH_TO_INVENTORY_FILE=./ansible_hosts
-ansible-playbook ./playbooks/byo/config.yml ${PATH_TO_INVENTORY_FILE}
+ansible-playbook ./playbooks/byo/config.yml -i ${PATH_TO_INVENTORY_FILE}
 
 ######## METHOD 3.b #############
 # sudo mkdir /home/Projects/; cd $_
@@ -215,7 +215,7 @@ ansible-playbook ./playbooks/byo/config.yml ${PATH_TO_INVENTORY_FILE}
 # for HOST in `grep -i rh7osemst ~/hosts`; do ssh $HOST "subscription-manager repos --enable=rhel-ha-for-rhel-7-server-rpms"; done
 fi [ ! -f ${PATH_TO_INVENTORY_FILE} ]; then echo "Ansible Hosts file not found"; exit 9; fi
 
-# ansible-playbook ./playbooks/byo/config.yml ${PATH_TO_INVENTORY_FILE}
+# ansible-playbook ./playbooks/byo/config.yml -i ${PATH_TO_INVENTORY_FILE}
 
    ###########################################################
 #################### END OF METHOD 3 ############################
