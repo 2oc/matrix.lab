@@ -237,6 +237,14 @@ do
   echo "hammer repository-set enable --organization=\"${ORGANIZATION}\" --basearch='x86_64' --releasever='7Server' --product=\"${PRODUCT}\" --id=\"${REPO}\" "
   hammer repository-set enable --organization="${ORGANIZATION}" --basearch='x86_64' --releasever='7Server' --product="${PRODUCT}" --id="${REPO}"
 done
+REPOS="2463 2472 2456 2476"
+for REPO in $REPOS
+do
+  echo; echo "NOTE:  Enabling (${REPO}): `grep $REPO ~/hammer_repository-set_list-"${PRODUCT}".out | cut -f3 -d\|`"
+  echo "hammer repository-set enable --organization=\"${ORGANIZATION}\" --basearch='x86_64' --releasever='7.2' --product=\"${PRODUCT}\" --id=\"${REPO}\" "
+  hammer repository-set enable --organization="${ORGANIZATION}" --basearch='x86_64' --releasever='7.2' --product="${PRODUCT}" --id="${REPO}"
+done
+
 ## THERE ARE REPOS WHICH DO *NOT* ACCEPT A "releasever" VALUE
 REPOS="4185 4188 3030"
 for REPO in $REPOS
@@ -317,7 +325,6 @@ hammer product set-sync-plan --sync-plan='Daily sync - EPEL' --organization="${O
 # It's best y'all leave right now....
 exit 0
 
-
 ### WARNING !!!
 # PROCEED WITH CAUTION AND REVIEW BEFORE USING THE FOLLOWING CODE...
 ### WARNING !!!  
@@ -325,16 +332,19 @@ exit 0
 #################
 ## CONTENT VIEWS (I AM STILL LEARNING THIS YET...)
 ## TODO: Add repos to the content-view
-
+SLEEPYTIME=10
 LIFECYCLEID=`hammer lifecycle-environment list --organization="${ORGANIZATION}" | grep -v "Library" | awk '{ print $1 }' | head -1`
 for LIFECYCLEENV in `hammer lifecycle-environment list --organization="${ORGANIZATION}" | awk -F\| '{ print $2 }' | egrep -v 'Library|NAME|^-'`
 do 
   echo "hammer content-view create --name=\"Content View - ${LIFECYCLEENV}\" --organization=\"${ORGANIZATION}\" "
   hammer content-view create --name="Content View - ${LIFECYCLEENV}" --organization="${ORGANIZATION}"
+  sleep ${SLEEPYTIME} 
   echo "hammer content-view publish --name=\"Content View - ${LIFECYCLEENV}\" --organization=\"${ORGANIZATION}\" --async"
   hammer content-view publish --name="Content View - ${LIFECYCLEENV}" --organization="${ORGANIZATION}" --async
+  sleep ${SLEEPYTIME} 
   echo "hammer content-view version promote --organization=\"${ORGANIZATION}\" --content-view=\"Content View - ${LIFECYCLEENV}\" --to-lifecycle-environment=\"${LIFECYCLEENV}\" --version=1  --async"
   hammer content-view version promote --organization="${ORGANIZATION}" --content-view="Content View - ${LIFECYCLEENV}" --to-lifecycle-environment="${LIFECYCLEENV}" --version=1  --async
+  sleep ${SLEEPYTIME} 
 done
 
 #################

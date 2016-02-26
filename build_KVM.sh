@@ -6,8 +6,7 @@ usage() {
   exit 9; 
 }
 
-if [ $# -ne 1 ]; then usage; fi
-if [ `whoami` != "root" ]; then echo "ERROR: you should be root"; exit 9; fi
+if [ $# -ne 1 ]; then usage; fi if [ `whoami` != "root" ]; then echo "ERROR: you should be root"; exit 9; fi
 
 # See if the VM is already running
 virsh list | grep ${1} 
@@ -90,6 +89,7 @@ esac
 # Need to create a way to deal with more than one "build-time" disk
 case $NUMDISK in
   2)
+    echo "Started: `date`"
 virt-install --noautoconsole --name ${GUESTNAME} --hvm --connect qemu:///system \
   --description "${GUESTNAME}" --virt-type=kvm \
   --network=bridge:brkvm --vcpus=${NUMCPUS} --ram=${MEM} \
@@ -98,8 +98,10 @@ virt-install --noautoconsole --name ${GUESTNAME} --hvm --connect qemu:///system 
   --os-type=linux --os-variant=${OSVARIANT}  \
   --location="http://${WEBSERVER}/OS/${OSDIR}" \
   -x "ks=http://${WEBSERVER}/${GUESTNAME}.ks"
+  echo "Completed: `date`"
   ;;
   *)
+    echo "Started: `date`"
 virt-install --noautoconsole --name ${GUESTNAME} --hvm --connect qemu:///system \
   --description "${GUESTNAME}" --virt-type=kvm \
   --network=bridge:brkvm --vcpus=${NUMCPUS} --ram=${MEM} \
@@ -107,6 +109,7 @@ virt-install --noautoconsole --name ${GUESTNAME} --hvm --connect qemu:///system 
   --os-type=linux --os-variant=${OSVARIANT} \
   --location="http://${WEBSERVER}/OS/${OSDIR}" \
   -x "ks=http://${WEBSERVER}/${GUESTNAME}.ks"
+  echo "Completed: `date`"
   ;;
 esac
 
