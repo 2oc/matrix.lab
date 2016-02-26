@@ -120,7 +120,7 @@ oadm router harouter --stats-password='Passw0rd' --replicas=2 \
   --default-cert=${CERTPATH}${CLOUDDOMAIN}.pem \
   --config=/etc/origin/master/admin.kubeconfig  \
   --credentials='/etc/origin/master/openshift-router.kubeconfig' \
-  --images='registry.access.redhat.com/openshift3/ose-haproxy-router:v3.0.0.1' \
+  --images='registry.access.redhat.com/openshift3/ose-haproxy-router:latest' \
   --selector='region=infra' --service-account=router
   
 ######################### ######################### #########################
