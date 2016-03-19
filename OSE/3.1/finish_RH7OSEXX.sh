@@ -233,9 +233,12 @@ sed -i -e 's/kind: DenyAllPasswordIdentityProvider/kind: HTPasswdPasswordIdentit
 yum -y install httpd-tools
 touch /etc/origin/openshift-passwd
 useradd morpheus 
+useradd oseuser
 echo Passw0rd | passwd --stdin morpheus 
+echo Passw0rd | passwd --stdin oseuser 
 
 htpasswd -b /etc/origin/openshift-passwd morpheus Passw0rd
+htpasswd -b /etc/origin/openshift-passwd oseuser Passw0rd
 
 sed -i -e "s/subdomain:  \"\"/subdomain:  \"cloudapps.\${DOMAIN}\"/g" /etc/origin/master/master-config.yaml
 systemctl restart atomic-openshift-master-api
