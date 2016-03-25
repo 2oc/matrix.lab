@@ -1,0 +1,22 @@
+[OSEv3:children]
+masters
+nodes
+
+# Set variables common for all OSEv3 hosts
+[OSEv3:vars]
+ansible_ssh_user=root
+deployment_type=openshift-enterprise
+
+# Uncomment the following to enable htpasswd authentication; defaults to
+# DenyAllPasswordIdentityProvider.
+openshift_master_identity_providers=[{'name': 'htpasswd_auth', 'login': 'true', 'challenge': 'true', 'kind': 'HTPasswdPasswordIdentityProvider', 'filename': '/etc/origin/openshift-passwd'}]
+
+
+# host group for masters
+[masters]
+rh7osemst01.doublethink.lab
+
+# host group for nodes, includes region info
+[nodes]
+rh7osemst01.doublethink.lab openshift_node_labels="{'region': 'infra', 'zone': 'default'}"
+rh7osenod01.doublethink.lab openshift_node_labels="{'region': 'primary', 'zone': 'central'}"

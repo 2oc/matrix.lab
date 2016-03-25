@@ -2,9 +2,14 @@ DOMAIN=`hostname -d`
 CLOUDDOMAIN="cloudapps.${DOMAIN}"
 echo "$DOMAIN $CLOUDDOMAIN"
 
-# NOTE:  This is basically intended to be run on rh7osemst01 (with the resultant 
-#          updates to be distributed to other master nodes, and then the OSE service
-#          restarted.
+# NOTE:  This is basically intended to be run on rh7osemst01 (with the resultant
+#          updates to be distributed to other master nodes, and then the OSE 
+#          service restarted.
+
+for NODE in `egrep 'oseinf|osenod|osemst' ./hosts`
+do 
+  ssh-copy-id $NODE
+done
 
 ######################### ######################### #########################
 # Customize Login Page (webUI)
@@ -59,7 +64,7 @@ oc volume deploymentconfigs/docker-registry \
 ###################### ###################### ######################
 REGIP=`oc get service docker-registry | grep docker-registry | awk '{ print $2 }'`
 CERTPATH=/etc/origin/master
-EXTREGISTRY="ose-registry.${CLOUDDOMAIN}"
+EXTREGISTRY="registry.${CLOUDDOMAIN}"
 # NOTE:  I may need/want to figure out how to add the external IPs to this command also
 oadm ca create-server-cert --signer-cert=${CERTPATH}/ca.crt \
   --signer-key=${CERTPATH}/ca.key --signer-serial=${CERTPATH}/ca.serial.txt \
@@ -68,16 +73,18 @@ oadm ca create-server-cert --signer-cert=${CERTPATH}/ca.crt \
 
 cat ${CERTPATH}/registry.crt ${CERTPATH}/registry.key > ${CERTPATH}/registry.pem
 
-for MASTER in `grep mst hosts`; do scp ${CERTPATH}/registry.* ${MASTER}:${CERTPATH}/; done
+for MASTER in `grep mst hosts | grep -v mst01`; do scp ${CERTPATH}/registry.* ${MASTER}:${CERTPATH}/; done
 
 # Display Cert content
-openssl x509 -in ${CERTPATH}/registry.pem -text
+openssl x509 -in ${CERTPATH}/registry.pem -text | grep DNS
   
 oc secrets new registry-secret ${CERTPATH}/registry.crt ${CERTPATH}/registry.key
 oc secrets add serviceaccounts/default secrets/registry-secret
 oc volume dc/docker-registry --add --type=secret \
     --secret-name=registry-secret -m /etc/secrets
 sleep 20
+#  You now need to update the dc:docker-registry to set livenessProbe:httpGet:scheme: HTTP (to HTTPS)
+# oc edit dc docker-registry
 
 oc env dc/docker-registry \
     REGISTRY_HTTP_TLS_CERTIFICATE=/etc/secrets/registry.crt \
@@ -92,17 +99,17 @@ oc log `oc get pods | grep ^docker-registry | awk '{ print $1 }' ` | grep tls
 # Place certs in Docker directory and Copy certs to all the Docker nodes...
 mkdir /etc/docker/certs.d/docker-registry.default.svc.cluster.local:5000/
 mkdir /etc/docker/certs.d/`oc get service | grep registry | awk '{ print $2":"$4 }' | sed 's/\/TCP//g'`
-mkdir /etc/docker/certs.d/${EXTREGISTRY}:5000/
-
+#mkdir /etc/docker/certs.d/${EXTREGISTRY}:5000/
+Passw0rd
 chmod 755 /etc/docker/certs.d/*:5000/
 cp /etc/origin/master/ca.crt /etc/docker/certs.d/`oc get service | grep registry | awk '{ print $2":"$4 }' | sed 's/\/TCP//g'`  
 cp /etc/origin/master/ca.crt /etc/docker/certs.d/docker-registry.default.svc.cluster.local:5000/
-cp /etc/origin/master/ca.crt /etc/docker/certs.d/${EXTREGISTRY}:5000/
-for NODE in `egrep 'oseinf|osenod|osemst' ./hosts`
+#cp /etc/origin/master/ca.crt /etc/docker/certs.d/${EXTREGISTRY}:5000/
+for NODE in `egrep 'oseinf|osenod|osemst' ./hosts | grep -v mst01`
 do
   rsync -tugrpolvv /etc/docker/certs.d/`oc get service | grep registry | awk '{ print $2":"$4 }' | sed 's/\/TCP//g'` ${NODE}:/etc/docker/certs.d/
   rsync -tugrpolvv /etc/docker/certs.d/docker-registry.default.svc.cluster.local:5000 ${NODE}:/etc/docker/certs.d/
-  rsync -tugrpolvv /etc/docker/certs.d/${EXTREGISTRY}:5000 ${NODE}:/etc/docker/certs.d/
+#  rsync -tugrpolvv /etc/docker/certs.d/${EXTREGISTRY}:5000 ${NODE}:/etc/docker/certs.d/
 done
   
 # Remove the insecure-registry from /etc/sysconfig/docker
@@ -121,12 +128,12 @@ oadm router harouter --stats-password='Passw0rd' --replicas=2 \
   --config=/etc/origin/master/admin.kubeconfig  \
   --credentials='/etc/origin/master/openshift-router.kubeconfig' \
   --images='registry.access.redhat.com/openshift3/ose-haproxy-router:latest' \
-  --selector='region=infra' --service-account=router
+  --selector='region=primary,zone=central' --service-account=router
   
 ######################### ######################### #########################
 # Expose Registry
 ######################### ######################### #########################
-EXTREGISTRY="ose-registry.${CLOUDDOMAIN}"
+EXTREGISTRY="registry.${CLOUDDOMAIN}"
 mkdir -p ~/Projects/Registry; cd $_
 cat << EOF > expose-registry.json
 apiVersion: v1
