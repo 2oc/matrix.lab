@@ -21,7 +21,7 @@
 ####################
 
 ISONAME=satellite-6.1.1-rhel-7-x86_64-dvd.iso
-PASSWORD=${PASSWORD}
+PASSWORD="Passw0rd"
 
 # I have found it easier to NOT use whitespace in the ORGANIZATION Variable
 cat << EOF >> ~/.bash_profile
@@ -39,17 +39,36 @@ EOF
 #   determine if host is subscribed already, if not check of login info... if blank, exit, else subscribe
 # You *should* not need to reregister the node - therefore leave these blank unless
 #   you discover you need to register your node.
-#RHNUSER=""
-#RHNPASSWD=""
+RHNUSER=""
+RHNPASSWD=""
 
-#if [ -z ${RHNUSER} ] || [ -z ${RHNPASSWD} ]
-#then
-#  echo "ERROR:  Please update RHNUSER/RHNPASSWD Variables in the beginning of this script."
-#  echo "        Script cannot proceed with empty values."
-#  exit 9
-#fi
+COUNTER=0
+while true
+do
+  subscription-manager status
+  ISREGISTERED=$?
+  case $ISREGISTERED in 
+    0)
+      echo "NOTE: System is registered"
+      break
+    ;;
+    *)
+      echo "NOTE: System is not registered."
+      subscription-manager register --username=$RHNUSER --password=$RHNPASSWD --auto-attach
+    ;;
+  esac
+  COUNTER=$((COUNTER + 1))
+  if [ $COUNTER == 2 ]; then echo "ERROR:  Unable to register system."; break; fi
+done
+ 
+if [ -z ${RHNUSER} ] || [ -z ${RHNPASSWD} ]
+then
+  echo "ERROR:  Please update RHNUSER/RHNPASSWD Variables in the beginning of this script."
+  echo "        Script cannot proceed with empty values."
+  exit 9
+fi
 # You *should* not need to reregister the node 
-#subscription-manager register --auto-attach --username="$RHNUSER" --password="$RHNPASSWD"
+subscription-manager register --auto-attach --username="$RHNUSER" --password="$RHNPASSWD"
 # */
 
 ####################################################################################
@@ -128,9 +147,8 @@ firewall-cmd --permanent --direct --add-rule ipv6 filter OUTPUT 1 -o lo -p tcp -
 ####################################################################################
 ## INSTALL
 ####################################################################################
-# I cannot seem to get the install to work via channels ;-(
-# From channels
-#yum -y install katello
+# Install Satellite from channels
+yum -y install katello
 
 # Or... ISO
 # wget -O /root/$ISONAME <URL to ISO - from access>
