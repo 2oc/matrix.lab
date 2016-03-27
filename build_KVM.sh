@@ -6,7 +6,8 @@ usage() {
   exit 9; 
 }
 
-if [ $# -ne 1 ]; then usage; fi if [ `whoami` != "root" ]; then echo "ERROR: you should be root"; exit 9; fi
+if [ $# -ne 1 ]; then usage; fi 
+if [ `whoami` != "root" ]; then echo "ERROR: you should be root"; exit 9; fi
 
 # See if the VM is already running
 virsh list | grep ${1} 
