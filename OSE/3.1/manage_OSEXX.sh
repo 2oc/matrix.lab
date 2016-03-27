@@ -128,7 +128,7 @@ oadm router harouter --stats-password='Passw0rd' --replicas=2 \
   --config=/etc/origin/master/admin.kubeconfig  \
   --credentials='/etc/origin/master/openshift-router.kubeconfig' \
   --images='registry.access.redhat.com/openshift3/ose-haproxy-router:latest' \
-  --selector='region=primary,zone=central' --service-account=router
+  --selector='region=infra,zone=default' --service-account=router
   
 ######################### ######################### #########################
 # Expose Registry
