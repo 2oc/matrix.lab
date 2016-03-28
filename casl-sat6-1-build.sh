@@ -4,8 +4,7 @@
 # Date:          2015-12-07
 # Purpose:       basic install of Satellite 6.1
 # Notes:         This script should provide basic functionality with the channels needed for OSE v3 
-#                This is not even a "beta" at this point.  There are several particulars that are clunky
-#                  i.e. downloading an ISO, statically defninig hostnames, etc...
+#                This is not even a "beta" at this point.  It should, however, still work ;-)
 #                Review the script before executing it.
 
 
@@ -67,9 +66,6 @@ then
   echo "        Script cannot proceed with empty values."
   exit 9
 fi
-# You *should* not need to reregister the node 
-subscription-manager register --auto-attach --username="$RHNUSER" --password="$RHNPASSWD"
-# */
 
 ####################################################################################
 ###  PRE
