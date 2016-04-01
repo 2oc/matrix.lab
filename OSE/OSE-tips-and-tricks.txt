@@ -74,4 +74,9 @@ openssl s_client -connect host:port -servername host
 $HOSTNAME=myhost.example.private
 echo | openssl s_client -connect ${HOSTNAME}:443 | sed -n /BEGIN/,/END/p > ${HOSTNAME}
 
+#  Region and Zone explained
+#  Think of region like a data center (Affinity)
+#           zone is a rack (Anti-Affinity)
+#  You would want an app to run in a single datacenter (region)
+#     but you would want them to run in different racks  (zone)
 
