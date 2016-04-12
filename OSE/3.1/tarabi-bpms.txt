@@ -33,7 +33,7 @@ mxslogin
 
 MYPROJ='tarabi-bpms'
 mkdir -p ~/Projects/${MYPROJ}; cd $_
-docker pull  docker.io/arabitm86/tarabi-jboss-bpms-6.1
+docker pull docker.io/arabitm86/tarabi-jboss-bpms-6.1
 docker tag `docker images arabitm86/tarabi-jboss-bpms-6.1:latest | grep -v ^REPO | awk '{ print $3 }'` registry.cloudapps.matrix.lab:443/${MYPROJ}/tarabi-jboss-bpms-6.1
 oc new-app tarabi-jboss-bpms-6.1
 

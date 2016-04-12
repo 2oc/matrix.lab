@@ -21,7 +21,8 @@ case `lsb_release -i | awk '{ print $3 }'` in
     YUMCOMMAND="sudo yum"
   ;;
 esac
-    
+   OMMAND="sudo yum"
+
 while getopts d: OPT
 do  
   case $OPT in
@@ -45,6 +46,9 @@ case $DOMAIN in
   ;;
   'aperture.lab')
     WEBREPO=192.168.122.1
+  ;;
+  'doublethink.lab')
+    WEBREPO=172.16.118.2
   ;;
   *)
     echo "ERROR: Domain not recognized foo..."
@@ -83,7 +87,8 @@ done
 for HOST in `cat hosts`
 do
   echo "Configuring: $HOST"
-  ssh $HOST "sh ./post_install.sh"
+  #ssh $HOST "sh ./post_install.sh"
+  ssh $HOST "subscription-manager register --auto-attach --force "
 done
 for HOST in `cat hosts`
 do
@@ -96,6 +101,8 @@ for HOST in `cat hosts`
 do  
   echo "# Configuring: $HOST"
   ssh $HOST bash -c "' subscription-manager repos --disable=* --enable rhel-7-server-rpms --enable rhel-7-server-optional-rpms --enable rhel-7-server-extras-rpms --enable rhel-7-server-ose-${OSEVERSION}-rpms 
+    # TEMP WORKAROUND
+    echo "exclude=docker*1.9*"  >> /etc/yum.conf
 '"
   echo 
 done
@@ -287,4 +294,3 @@ ipa dnsrecord-add cloudapps.linuxrevolution.com '*' --a-rec $IPADDR
 
 # [root@rh6ns01 ~]# host -l matrix.lab | grep -v rh7idm | sed 's/.matrix.lab//g' | grep -v dhcp | awk '{ print "ipa dnsrecord-add matrix.lab "$1" --a-rec "$4 }'
 # [root@rh6ns01 ~]# host -l matrix.lab | egrep -v 'rh7idm|^mat' | sort -k4 | sed 's/10.10.10.//g' | grep -v dhcp | awk '{ print "ipa dnsrecord-add 10.10.10.in-addr.arpa "$4" --ptr-rec "$1"." }'
-iiiiiiiiiii

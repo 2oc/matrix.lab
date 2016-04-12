@@ -14,7 +14,7 @@ journalctl -f -u openshift-node
 # REMOVE ALL REGISTRY ENTRIES
   #for resource in service deploymentConfig pod route serviceaccount secret rc; do
   for resource in service deploymentConfig pod route rc; do
-    resource_names=$(oc get $resource | awk '/registry/ {print $1}')
+    resource_names=$(oc get $resource | awk '/router/ {print $1}')
     for name in ${resource_names/'\n'/ }; do
       echo "oc delete $resource $name"
       oc delete $resource $name
@@ -79,4 +79,10 @@ echo | openssl s_client -connect ${HOSTNAME}:443 | sed -n /BEGIN/,/END/p > ${HOS
 #           zone is a rack (Anti-Affinity)
 #  You would want an app to run in a single datacenter (region)
 #     but you would want them to run in different racks  (zone)
+
+# Import example templates/imagestreams
+cd /usr/share/openshift/examples
+find . -name "*.json" -exec oc create -f {} \;
+
+curl -x localhost:3128 https://registry.access.redhat.com/v1/_ping
 

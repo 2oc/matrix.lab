@@ -12,9 +12,9 @@ NOTES:  Some of these troubleshooting procedures are very specific due to a non-
 #                     COMMANDS
 # ******************************************************************************
 # ******************************************************************************
-oc get enpoints
+oc get endpoints
 oc get hostsubnets
-
+oc get nodes
 
 * Port availablilty
 ## LISTEN
@@ -24,7 +24,11 @@ nmap -p 4789
 ping <IP of dest> -I <interface>
 
 * IPTABLES
-iptables -n -L -??? NAT
+iptables -L -vnt nat 
+ovs-ofctl -O OpenFlow13 dump-flows br0 
+
+ovs-vsctl list-br
+brctl show 
 
 * Service availability
 netstat -anp | grep <port>:
