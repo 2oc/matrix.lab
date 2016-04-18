@@ -252,6 +252,7 @@ oc edit bc
 ######################### ######################### ######################### 
 # Another S2I
 ######################### ######################### ######################### 
+# https://github.com/openshift/origin/tree/master/examples
 MYPROJ="ruby-keypair"
 oadm new-project ${MYPROJ} --display-name="Demo KeyPair - Ruby Source2Image" \
     --description="OSE Origin Ruby Source to Image example" \
