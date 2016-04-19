@@ -11,6 +11,27 @@ systemctl restart openshift-master
 journalctl -f -u openshift-master
 journalctl -f -u openshift-node
 
+# Fixed Registry IP
+cat << EOF > registry_fixedIP.sh
+#!/bin/bash
+
+REGISTRY_IP=172.30.0.2
+TMPFILE=$(mktemp)
+
+oc get svc docker-registry -n default -o yaml | sed -re "/(cluster|portal)IP:/s/:\s+[0-9.]+$/: ${REGISTRY_IP}/" > $TMPFILE || exit 1
+# Have to use delete/create since IP address is immutable attribute
+oc delete svc docker-registry -n default
+oc create -f $TMPFILE
+
+rm -f $TMPFILE
+
+systemctl restart atomic-openshift-master.service
+
+echo "Please restart other OpenShift Masters"
+
+exit 0
+EOF
+
 # REMOVE ALL REGISTRY ENTRIES
   #for resource in service deploymentConfig pod route serviceaccount secret rc; do
   for resource in service deploymentConfig pod route rc; do
