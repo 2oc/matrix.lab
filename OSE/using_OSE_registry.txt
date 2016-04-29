@@ -1,0 +1,27 @@
+## Get the registry IP
+[master] 
+# oc get svc docker-registry
+# oc login -u '<user>' -p '<password>' https://<master URL>:8443
+
+# oc new-project test-project
+# oc whoami 
+# oc whoami -t 
+
+[node1] 
+$ docker login -u '<oc whoami>' -p '<oc whoami -t>' -e 'whatever@blah.com' 172.30.0.2:5000
+
+$ docker tag <image> 172.30.0.2:5000/test-project/test-image
+$ docker docker push 172.30.0.2:5000/test-project/test-image
+
+## this will create an imagestream (is) in your project
+[master]
+$ oc get is
+$ oc new-app <is name>
+
+#### NOTES 
+The ImageStream is an important component used by OSE.  It tracks images from a current and historical perspective.  This is an important point.  To keep track the image over different iterations.
+
+When an image is needed, the openshift-master-controllers will reach out to gather details about the image (labels, tags, version, etc...) which it will track locally.
+
+
+

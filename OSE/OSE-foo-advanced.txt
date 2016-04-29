@@ -84,3 +84,8 @@ aoappd-cluster (H/A for cluster-management traffic)
 10..xxx/24 - Computer Nodes (DMZ)
 
 The Management Zone should 
+
+
+
+# Import IS
+for IS in `oc get is -n openshift | awk '{ print $1 }' | grep -v NAME`; do oc import-image $IS -n openshift; done

@@ -11,7 +11,7 @@ systemctl restart openshift-master
 journalctl -f -u openshift-master
 journalctl -f -u openshift-node
 
-# Fixed Registry IP
+# Registry with Fixed IP
 cat << EOF > registry_fixedIP.sh
 #!/bin/bash
 
