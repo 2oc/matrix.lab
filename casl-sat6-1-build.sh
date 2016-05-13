@@ -35,7 +35,8 @@ EOF
 
 # /*
 # THIS SECTION NEEDS TO BE REVISITED.
-#   determine if host is subscribed already, if not check of login info... if blank, exit, else subscribe
+#   determine if host is subscribed already, if not check of login info... 
+#     if blank, exit, else subscribe
 # You *should* not need to reregister the node - therefore leave these blank unless
 #   you discover you need to register your node.
 RHNUSER=""
