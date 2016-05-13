@@ -25,7 +25,7 @@ network  --hostname=rhel7a.matrix.private
 rootpw --iscrypted $6$K6beNUML$Z1KZvoI2k8YryzT0Tz2NkJaNTudnTCFSm0DduMqJE9o/jKnq2kAnX63rs9k7FS8cQp2twDtXXjjrBMV5mju9b.
 # System timezone
 timezone America/New_York --isUtc
-user --groups=wheel --homedir=/home/jradtke --name=jradtke --password=$6$D2r1L9vQNwWdkvQL$aLlFRhwANb3Ht5xegTmpvfCxPntxNYscP/4cP3xaonWTjO/t//CiG7sRCEyK23MBTXJBVLhswkbBsViDXQ5bw. --iscrypted --uid=2025 --gecos="James Radtke" --gid=2025
+user --groups=wheel --homedir=/home/morpheus --name=morpheus --password=$6$YTbEzW.h$aPoQPlRS8HR9CkX6.3m5wO/0aEhnBe1ajOZx7fYM0tggmoX8YWH2Y44cvfaH3Mt3waG9tJzMiGbw5u3Miajlb.  --iscrypted --uid=2025 --gecos="Morpheus" --gid=2025
 # X Window System configuration information
 xconfig  --startxonboot
 # System bootloader configuration
