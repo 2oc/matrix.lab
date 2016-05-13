@@ -1,4 +1,10 @@
 #!/bin/sh
+#
+# Purpose:  This is a script create to process a single hostname as input 
+#             and fetch the configuration parameters from a configuration file
+#           I created it to primarily save myself some time
+#  Author:  James Radtke <jradtke@redhat.com>
+#   NOTES:  This is NOT a Red Hat supported work
 
 usage() {
   echo "ERROR: Pass a guestname" 
@@ -117,4 +123,5 @@ esac
 done
 
 exit 0
-  echo "inst.gpt ip=10.10.10.121:10.10.10.1:255.255.255.0:rh7idm01.matrix.lab:eth0:static ks=http://${WEBSERVER}/${GUESTNAME}.ks"
+# Snippet about newer style of boot params
+echo "inst.gpt ip=10.10.10.121:10.10.10.1:255.255.255.0:rh7idm01.matrix.lab:eth0:static ks=http://${WEBSERVER}/${GUESTNAME}.ks"
