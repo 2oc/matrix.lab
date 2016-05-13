@@ -4,15 +4,19 @@
 ####   RUN THE STEPS MANUALLY
 #### Technically, the ansible playbook can be run anywhere and pointed at the nodes.
 #### I have found that you should likely run this from a RHEL host which has access 
-####   to the OSE channels
+####   to the OSE channels and Anisble
 
-#### NOTE:  You need to configure your ~/.ssh/config file as follows 
+#### NOTE:  You *should* configure your ~/.ssh/config file as follows 
 # Host rh7ose*  RH7OSE*
 #     user root
+#     UserKnownHostsFile ~/.ssh/known_hosts.lab
+#  
+# This wil "force" connections to the OSE nodes to connect using the root user.  Also,
+#   this config will use a separate known_hosts file which simplifies clean up later.
 
-HAMSTR=1
 OSEVERSION=3.1
 
+#  Determine platform to select the appropriate Yum command to use
 case `lsb_release -i | awk '{ print $3 }'` in 
   Fedora)
     YUMCOMMAND="sudo dnf"
@@ -21,8 +25,8 @@ case `lsb_release -i | awk '{ print $3 }'` in
     YUMCOMMAND="sudo yum"
   ;;
 esac
-   OMMAND="sudo yum"
 
+DOMAIN=`hostname -d`
 while getopts d: OPT
 do  
   case $OPT in
@@ -36,28 +40,9 @@ do
 done
 shift $((OPTIND-1)) 
 
-if [ -z $DOMAIN ]; then DOMAIN=`hostname -d`; fi
-
 echo "DOMAIN: $DOMAIN"
 
-case $DOMAIN in 
-  'matrix.lab')
-    WEBREPO=10.10.10.10
-  ;;
-  'aperture.lab')
-    WEBREPO=192.168.122.1
-  ;;
-  'doublethink.lab')
-    WEBREPO=172.16.118.2
-  ;;
-  *)
-    echo "ERROR: Domain not recognized foo..."
-    echo "   [can|should] not proceed."
-    exit 9
-  ;;
-esac
-
-# Update this according to your layout
+# Update this according to your node topology 
 cat << EOF > ./hosts
 rh7osemst01.${DOMAIN}
 rh7osemst02.${DOMAIN}
@@ -101,7 +86,7 @@ for HOST in `cat hosts`
 do  
   echo "# Configuring: $HOST"
   ssh $HOST bash -c "' subscription-manager repos --disable=* --enable rhel-7-server-rpms --enable rhel-7-server-optional-rpms --enable rhel-7-server-extras-rpms --enable rhel-7-server-ose-${OSEVERSION}-rpms 
-    # TEMP WORKAROUND
+    # TEMP WORKAROUND - OSE cannot deal with docker-1.9 yet
     echo "exclude=docker*1.9*"  >> /etc/yum.conf
 '"
   echo 
@@ -156,6 +141,7 @@ then
   systemctl status docker
 fi
 EOF
+# Install and Configure Docker on all the nodes (except ETCD)
 for HOST in `egrep -i 'oseinf|osenod|osemst' hosts`
 do 
     echo "########## ############### ###############"
@@ -165,6 +151,7 @@ do
     ssh ${HOST} "sh ./my-docker-storage-setup"
     echo
 done
+# Check the status (info) of Docker
 for HOST in `egrep -i 'oseinf|osenod|osemst' hosts`
 do
   ssh -q ${HOST} "hostname; systemctl status docker | grep 'docker.service' -A3" 
@@ -177,6 +164,12 @@ if [ -f ~/.ssh/config ]; then cp ~/.ssh/config ~/.ssh/config-`date +%F`; fi
 cat << EOF >> ~/.ssh/config
 host *
   StrictHostKeyChecking no
+EOF
+
+# Update Ansible configuration for logging
+cat << EOF > ~/.ansible.cfg
+[defaults] 
+log_path=~/.ansible.log
 EOF
 
    ###########################################################
@@ -194,16 +187,11 @@ EOF
 ########################### METHOD 3 ############################
    ###########################################################
 
-cat << EOF > ~/.ansible.cfg
-[defaults] 
-log_path=~/.ansible.log
-EOF
-
-######## METHOD 3.a #############
-#   you can either use the RPM included openshfit-ansible playbooks
+######## METHOD 3.a - RPM utils #############
+#   you can either use the RPM included openshfit-ansible playbooks (preferred)
 #   Or, download them from github
 #  If your host is sub'd to the OSE channels - otherwise, you need to get them using
-#     [root@rh7osemst01 tmp]# yum -y install --downloadonly --downloaddir=/var/tmp/ atomic-openshift-utils
+#   [root@rh7osemst01 tmp]# yum -y install --downloadonly --downloaddir=/var/tmp/ atomic-openshift-utils
 #     
 $YUMCOMMAND -y install atomic-openshift-utils 
 $YUMCOMMAND -y install ansible
@@ -211,10 +199,10 @@ mv /etc/ansible/hosts /etc/ansible/hosts.orig
 
 # Update /etc/ansible/hosts with the appropriate topology 
 cd /usr/share/ansible/openshift-ansible
-PATH_TO_INVENTORY_FILE=./ansible_hosts
+PATH_TO_INVENTORY_FILE=~/ansible_hosts
 ansible-playbook ./playbooks/byo/config.yml -i ${PATH_TO_INVENTORY_FILE}
 
-######## METHOD 3.b #############
+######## METHOD 3.b - Github Source #############
 # sudo mkdir /home/Projects/; cd $_
 # sudo chown `whoami` /home/Projects
 # git clone https://github.com/openshift/openshift-ansible
@@ -231,6 +219,8 @@ fi [ ! -f ${PATH_TO_INVENTORY_FILE} ]; then echo "Ansible Hosts file not found";
 # rm config and put the original ssh config back (if there was one)
 rm -f ~/.ssh/config && mv ~/.ssh/config-`date +%F` ~/.ssh/config 
 
+#### The following Auth and subdomain stuff should be configurable via the ansible_host file
+####   I'll have to clean this up
 # Configure Authentication (HTPASS) - You need to run this on ALL masters
 cat << EOF > add_http_auth.sh
 DOMAIN=`hostname -d`
@@ -278,19 +268,17 @@ exit 0
 update_dns() {
 ssh rh7idm01
 kinit admin
-ipa dnszone-add cloudapps.matrix.lab --admin-email=root@matrix.lab --minimum=3000 --dynamic-update=true
-ipa dnsrecord-add cloudapps.matrix.lab '*' --a-rec 192.168.122.135
-ipa dnsrecord-add cloudapps.matrix.lab '*' --a-rec 192.168.122.136
-ipa dnszone-mod --allow-transfer='10.10.10.0/24;127.0.0.1' matrix.lab
-ipa dnszone-mod --allow-transfer='10.10.10.0/24;127.0.0.1' cloudapps.matrix.lab
-}
 
 # This is to expose my lab to the real world...
-IPADDR=`curl http://checkip.dyndns.org | cut -f2 -d\: |cut -f1 -d\< |sed 's/ //g'`
+EXTIPADDR=`curl http://checkip.dyndns.org | cut -f2 -d\: |cut -f1 -d\< |sed 's/ //g'`
+
 ipa dnszone-add linuxrevolution.com --admin-email=root@linuxrevolution.com --minimum=3000 
-ipa dnsrecord-add linuxrevolution.com '*' --a-rec $IPADDR
+ipa dnsrecord-add linuxrevolution.com '*' --a-rec 10.10.10.129
+ipa dnsrecord-add linuxrevolution.com '*' --a-rec 10.10.10.130
 ipa dnszone-add cloudapps.linuxrevolution.com --admin-email=root@linuxrevolution.com --minimum=3000 
-ipa dnsrecord-add cloudapps.linuxrevolution.com '*' --a-rec $IPADDR
+ipa dnsrecord-add cloudapps.linuxrevolution.com '*' --a-rec 10.10.10.135
+ipa dnsrecord-add cloudapps.linuxrevolution.com '*' --a-rec 10.10.10.136
+}
 
 # [root@rh6ns01 ~]# host -l matrix.lab | grep -v rh7idm | sed 's/.matrix.lab//g' | grep -v dhcp | awk '{ print "ipa dnsrecord-add matrix.lab "$1" --a-rec "$4 }'
 # [root@rh6ns01 ~]# host -l matrix.lab | egrep -v 'rh7idm|^mat' | sort -k4 | sed 's/10.10.10.//g' | grep -v dhcp | awk '{ print "ipa dnsrecord-add 10.10.10.in-addr.arpa "$4" --ptr-rec "$1"." }'
