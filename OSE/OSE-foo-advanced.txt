@@ -5,7 +5,8 @@
 # ******************************************************************************
 I'm trying to put together some advanced troubleshooting techniques
 
-NOTES:  Some of these troubleshooting procedures are very specific due to a non-standard architecture (shown and explained below)
+NOTES:  Some of these troubleshooting procedures are very specific due to a 
+          non-standard architecture (shown and explained below)
 
 # ******************************************************************************
 # ******************************************************************************
@@ -15,6 +16,7 @@ NOTES:  Some of these troubleshooting procedures are very specific due to a non-
 oc get endpoints
 oc get hostsubnets
 oc get nodes
+oc get events
 
 * Port availablilty
 ## LISTEN
@@ -23,28 +25,37 @@ tcpdump udp port 4789 and host <IP of src> -e <interface>
 nmap -p 4789 
 ping <IP of dest> -I <interface>
 
-* IPTABLES
+* IPTABLES, OVS and Bridge
 iptables -L -vnt nat 
 ovs-ofctl -O OpenFlow13 dump-flows br0 
-
 ovs-vsctl list-br
 brctl show 
+netstat -anp | grep <port>:
 
 * Service availability
-netstat -anp | grep <port>:
-systemclt status atomic-openshift-master[-api]
-systemclt status atomic-openshift-master
+systemclt status atomic-openshift-master-api
+systemctl status atomic-openshift-master-controllers
 systemclt status atomic-openshift-node
+systemclt status docker
 
 * Files to review
-journalctl -f -u atomic-openshift-master[-api]
+journalctl -f -u atomic-openshift-master-api
+journalctl -f -u atomic-openshift-master-controllers
 journalctl -f -u atomic-openshift-node
 journalctl -f -u docker
 
 * Files to review
-/var/log/mesages
+/var/log/messages
 /var/log/openshift-sdn/*.log (validate)
 
+* non-OSE processes to review
+stunnel
+squid
+
+*
+df -h | egrep origin
+for CONT in `docker ps -a | egrep 'Exit|Dead' | awk '{ print $1 }`; do docker rm $CONT; done
+docker rm $(docker ps status=exited) ### <<<< I need to double-check this syntax
 
 # ******************************************************************************
 # ******************************************************************************
@@ -52,40 +63,44 @@ journalctl -f -u docker
 # ******************************************************************************
 # ******************************************************************************
 # Network Topology 
-Our configuration has 3 distinct "tier" based on purpose.  
+Our configuration has 3 distinct "tiers" which were created for a particular usage.  
+* Management Tier
+* App Tier
+* Storage Tier (NFS)
 
 This was done for numerous reasons:
 * breach containment 
 * isolation to prevent snooping
 * isolation to limit performance impact (in the case of the storage)
 
-We have opted to use several f5 endpoints, all using passthrough SSL termination.  This is significant. 
+We have opted to use several f5 endpoints, all (currently) using passthrough SSL termination.  This is significant. 
 Also noteworthy, the hostnames assigned to the host are in a different domain, which is unrelated to the cloudapps domain.  The cluster utilizes these hostnames, but the application uses cloudapps.
-api (ingress point for API/CLI and webUI) 
-aoappd-cluster (H/A for cluster-management traffic)
-<star> (wildcard)
+api.<env> (ingress point for API/CLI and webUI) 
+aoappd-cluster.<env> (H/A for cluster-management traffic)
+<star>.<env> (wildcard - only for non-production networks)
+
+There is an exposed registry using a passhtru ssl termination.  We still have to use the self-signed cert for this due to the dependency of the *.local registry hostname and related cert.  This means any hosts which wish to use the exposed registry will need to trust the ca.crt from the master.
 
 * Management Tier 
-** api endpoint 
-** cluster-intercommunication
+** api endpoint (f5)
+** cluster-intercommunication (f5)
 ** ETCD
+* App Tier
+** wildcard (f5)
+
+# Assigned IP Addresses
 10.162.94.11-13/22 - Master Nodes
 10.162.94.14-16/22 - ETCD Nodes
-10.162.91.11-14/22 - Compute Nodes (non-secure)
-10.161.32.11-14/22 - Compute Nodes (DMZ)
+10.162.91.11-14/22 - Compute Nodes 
 
 * Application Tier 
-10.162.122.xxx/24 - Compute Nodes (non-secure)
-10.160.122.xxx/24 - Computer Nodes (DMZ)
+10.162.122.xxx/24 - Compute Nodes 
 
 * Storage Tier 
-10.xxx/24 - Master Nodes
-10.xxx/24 - Compute Nodes (non-secure)
-10..xxx/24 - Computer Nodes (DMZ)
+10.160.123.xxx/24 - Master Nodes and Compute Nodes 
 
-The Management Zone should 
-
-
-
+# Helpful commands
+oc get pods -o json --all-namespaces -watch
+oc get pods -o wide
 # Import IS
 for IS in `oc get is -n openshift | awk '{ print $1 }' | grep -v NAME`; do oc import-image $IS -n openshift; done
