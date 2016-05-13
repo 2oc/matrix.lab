@@ -1,3 +1,5 @@
+### NOTE:  Still a work in progress
+
 #  As root on an OSE master node
 #  reason: oadm is the only way to specify node-selectors while creating a project
 #          and you'll need system:admin to create the ServiceAccount anyhow...
@@ -5,42 +7,30 @@
 MYPROJ='tarabi-bpms'
 oadm new-project ${MYPROJ} --display-name="BPMS Source2Image" \
     --description="This project will run BPMS" \
-      --node-selector='region=primary,zone=prod' --admin=oseuser
-# Since I have now "plumbed my ENV to AD"....
-#oc policy add-role-to-user admin 'CN=OSE User,CN=Users,DC=matrix,DC=lab' -n hello-s2i
-#oc policy add-role-to-user admin 'oseuser' -n hello-s2i
-echo '{"kind":"ServiceAccount","apiVersion":"v1","metadata":{"name":"tarabi"}}' | oc create -f -
+      --node-selector='region=primary,zone=default' --admin=morpheus
+oc project $MYRPOJ
+echo '{"kind":"ServiceAccount","apiVersion":"v1","metadata":{"name":"morpheus"}}' | oc create -f -
+oadm policy add-scc-to-user anyuid system:serviceaccount:${MYPROJ}:morpheus
 
-# I am running Docker and oc from RHEL Workstation
-subscription-manager repos --disable=rhel-atomic-host-rpms
-
-cat << EOF > /etc/yum.repos.d/docker.repo 
-[dockerrepo]
-name=Docker Repository
-baseurl=https://yum.dockerproject.org/repo/main/centos/7
-enabled=1
-gpgcheck=1
-gpgkey=https://yum.dockerproject.org/gpg
-EOF
-yum -y install docker-engine
-groupadd docker
-usermod -aG docker oseuser
-systemctl restart docker
-
-
-su - oseuser
-mxslogin
-
+oclogin
 MYPROJ='tarabi-bpms'
+#oc new-project $MYPROJ
 mkdir -p ~/Projects/${MYPROJ}; cd $_
+docker login -u $(oc whoami) -p $(oc whoami -t) -e "blah@blah.com" registry.cloudapps.linuxrevolution.com:443
 docker pull docker.io/arabitm86/tarabi-jboss-bpms-6.1
-docker tag `docker images arabitm86/tarabi-jboss-bpms-6.1:latest | grep -v ^REPO | awk '{ print $3 }'` registry.cloudapps.matrix.lab:443/${MYPROJ}/tarabi-jboss-bpms-6.1
+docker tag `docker images | grep "arabitm86/tarabi-jboss-bpms-6.1"| grep -v ^REPO | tail -1 | awk '{ print $3 }'` registry.cloudapps.linuxrevolution.com:443/${MYPROJ}/tarabi-jboss-bpms-6.1
+docker push registry.cloudapps.linuxrevolution.com:443/${MYPROJ}/tarabi-jboss-bpms-6.1
+
 oc new-app tarabi-jboss-bpms-6.1
+oc edit dc 
+# Add the following... 
+      securityContext: {}
+      serviceAccount: morpheus
+      serviceAccountName: morpheus
+oc deploy `oc get dc | grep -v NAME | awk '{ print $1 }'` --latest
+# Expose the service
+echo '{ "kind": "List", "apiVersion": "v1", "metadata": {}, "items": [ { "kind": "Route", "apiVersion": "v1", "metadata": { "name": "tarabi-jboss-bpms-61", "creationTimestamp": null, "labels": { "app": "tarabi-jboss-bpms-61" } }, "spec": { "host": "tarabi-bpms.cloudapps.linuxrevolution.com", "to": { "kind": "Service", "name": "tarabi-jboss-bpms-61" }, "port": { "targetPort": "8080-tcp" }, "tls": { "termination": "edge" } }, "status": {} } ] }' | oc create -f -
 
 # Side-note - update admin password for IPA
 export LDAPTLS_CACERT=/etc/ipa/ca.crt
 ldappasswd -ZZ -D 'cn=directory manager' -W -S uid=admin,cn=users,cn=accounts,dc=matrix,dc=lab -H ldap://rh7idm01.matrix.lab
-
-
-
-
