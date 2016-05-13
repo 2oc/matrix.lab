@@ -59,6 +59,16 @@ oc volume deploymentconfigs/docker-registry \
  --mount-path=/registry \
  --source='{"nfs": { "server": "10.10.10.3", "path":"/exports/nfs/registry"}}'
 
+# Set the registry IP to a fixed address that is easy to reference (restart OSE)
+REGISTRY_IP=172.30.0.2
+TMPFILE=$(mktemp)
+oc get svc docker-registry -n default -o yaml | sed -re "/(cluster|portal)IP:/s/:\s+[0-9.]+$/: ${REGISTRY_IP}/" > $TMPFILE || exit 1
+# Have to use delete/create since IP address is immutable attribute
+oc delete svc docker-registry -n default
+oc create -f $TMPFILE
+rm -f $TMPFILE
+systemctl restart atomic-openshift-master-*
+
 ###################### ###################### ######################
 # Expose/Secure the Registry 
 ###################### ###################### ######################
@@ -123,8 +133,10 @@ done
 # Router
 #  NOTE:  You need a registry before you can create the router
 ######################### ######################### #########################
+# Create a PEM file from your cert, key and intermediate cert (alphassl)
+cat ${CERTPATH}/star_cloudapps_linuxrevolution_com.crt ${CERTPATH}/star_cloudapps_linuxrevolution_com.key > ${CERTPATH}${CLOUDDOMAIN}.pem
 oadm router harouter --stats-password='Passw0rd' --replicas=2 \
-  --default-cert=${CERTPATH}${CLOUDDOMAIN}.pem \
+  --default-cert=${CERTPATH}/star_cloudapps_linuxrevolution_com.pem \
   --config=/etc/origin/master/admin.kubeconfig  \
   --credentials='/etc/origin/master/openshift-router.kubeconfig' \
   --images='registry.access.redhat.com/openshift3/ose-haproxy-router:latest' \
@@ -191,7 +203,7 @@ cd /root/pvs
 cat pv{1..2} | oc create -f - -n default
 
 ######################
-# PROJECT (S2I Build)
+# PROJECT (S2I Build) - Hello Sinatra Ruby App
 ######################
 # On Master
 #  Simple Sinatra using source
@@ -250,7 +262,7 @@ oc edit bc
     type: Git
 
 ######################### ######################### ######################### 
-# Another S2I
+# Another S2I - Ruby Keypair
 ######################### ######################### ######################### 
 # https://github.com/openshift/origin/tree/master/examples
 MYPROJ="ruby-keypair"
@@ -267,10 +279,22 @@ oc create -f application-template-stibuild.json -n ${MYPROJ}
 mkdir -p ~/Projects/${MYPROJ}; cd $_
 
 oc process ruby-helloworld-sample -n ${MYPROJ} -o json > ruby-helloworld-sample
-sed -i -e 's/www.example.com/ruby-keypair.cloudapps.matrix.lab/g' ruby-helloworld-sample
+sed -i -e 's/www.example.com/ruby-keypair.cloudapps.linuxrevolution.com/g' ruby-helloworld-sample
 oc create -f ruby-helloworld-sample
 # wait a tic... then go to...
 # https://ruby-keypair.cloudapps.matrix.lab:443/
+
+######################### ######################### ######################### 
+#  PROJECT - Nodejs example - Work in Progress
+######################### ######################### ######################### 
+oc new-project nodejs-echo --display-name="nodejs" --description="Sample Node.js app"
+oc new-app https://github.com/openshift/nodejs-ex -l name=nodejs-echo
+oc expose svc nodejs-ex --hostname=nodejs-example.cloudapps.linuxrevolution.com
+oc edit route
+######################### ######################### ######################### 
+#  PROJECT - S2I build of Sinatra Ruby app for Rock:Paper:Scissor 
+######################### ######################### ######################### 
+<WIP> 
 
 ######################### ######################### ######################### 
 # PROJECT RESOURCE MANAGEMENT
