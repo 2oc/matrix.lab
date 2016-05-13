@@ -41,6 +41,7 @@ logvol /    --fstype=xfs --vgname=vg_rh7osenod01 --name=lv_root --label="root" -
 logvol swap --fstype=swap --vgname=vg_rh7osenod01 --name=lv_swap --label="swap" --size=2048
 logvol /home --fstype=xfs --vgname=vg_rh7osenod01 --name=lv_home --label="home" --size=1024
 logvol /tmp --fstype=xfs --vgname=vg_rh7osenod01 --name=lv_tmp --label="temp" --size=2048
+logvol /var/lib/docker --fstype=xfs --vgname=vg_rh7osenod01 --name=lv_vrlbdckr --label="docker" --size=5120
 
 eula --agreed
 reboot
