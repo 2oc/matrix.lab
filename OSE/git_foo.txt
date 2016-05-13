@@ -1,4 +1,19 @@
 
 
 
+# ~/.ssh/config
+Host github.com
+  Hostname github.com
+  User git
+  IdentityFile ~/.ssh/id_rsa-git
+Host gitlab.consulting.redhat.com
+  User jradtke
+  Port 2222
+  IdentityFile ~/.ssh/id_rsa-redhat-gitlab
+
+# No clue why I do this.. $-(
 git remote set-url --push origin git@github.com:jradtke-rh/matrix.lab.git
+
+# Add some verbiage re:  using ssh vs https 
+
+
