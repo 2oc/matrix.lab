@@ -107,3 +107,4 @@ find . -name "*.json" -exec oc create -f {} \;
 
 curl -x localhost:3128 https://registry.access.redhat.com/v1/_ping
 
+docker rm -v $(docker ps -a -q -f status=exited)
