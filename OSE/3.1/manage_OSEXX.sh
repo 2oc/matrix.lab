@@ -204,6 +204,7 @@ cat pv{1..2} | oc create -f - -n default
 
 ######################
 # PROJECT (S2I Build) - Hello Sinatra Ruby App
+#  This particular S2I is boringly simple, but it allows for simple curl to test
 ######################
 # On Master
 #  Simple Sinatra using source
@@ -231,35 +232,6 @@ oc expose service simple-openshift-sinatra \
 # If you want to manage the route, run...
 # oc edit route 
 # http://mysinatra.cloudapps.matrix.lab/
-
-# IF... you want to use ssh-keys and/or a specific .gitconfig
-# JUST .gitconfig
-mkdir 
-mkdir -p ~/Projects/${MYPROJ}; cd $_
-cat << EOF > ./.gitconfig
-[http]
-      sslVerify=false
-EOF
-oc secrets new mygitconfig .gitconfig=~/Projects/${MYPROJ}/.gitconfig 
-oc secrets add serviceaccount/builder secrets/mygitconfig
-
-# JUST sshkey
-ssh-keygen -trsa -b2048 -N '' -i ~/Projects/${MYPROJ}/.ssh/id_rsa 
-oc secrets new-sshauth mysshkey --ssh-privatekey=~/Projects/${MYPROJ}/.ssh/id_rsa 
-oc secrets add serviceaccount/builder secrets/mysshkey
-
-# BOTH
-oc secrets new-sshauth mysshkey-gitconfig --ssh-privatekey=~/Projects/${MYPROJ}/.ssh/id_rsa --gitconfig=~/Projects/${MYPROJ}/.gitconfig
-oc secrets add serviceaccount/builder secrets/mysshkey-gitconfig
-
-oc edit bc
-### THEN YOU NEED TO ADD THE FOLLOWING UNDER source:git
-  source:
-    git: 
-      uri: git@github.com/myrepo/project/gitfile.git
->    sourceSecret:
->      name: mysshkey-gitconfig
-    type: Git
 
 ######################### ######################### ######################### 
 # Another S2I - Ruby Keypair
@@ -291,10 +263,52 @@ oc new-project nodejs-echo --display-name="nodejs" --description="Sample Node.js
 oc new-app https://github.com/openshift/nodejs-ex -l name=nodejs-echo
 oc expose svc nodejs-ex --hostname=nodejs-example.cloudapps.linuxrevolution.com
 oc edit route
+
 ######################### ######################### ######################### 
 #  PROJECT - S2I build of Sinatra Ruby app for Rock:Paper:Scissor 
 ######################### ######################### ######################### 
-<WIP> 
+MYPROJ="ruby-sinatra-rps"
+oc project ${MYPROJ}
+mkdir ~/Projects/$_; cd $_
+oc new-app https://github.com/jradtke-rh/ruby-sinatra-rps.git -o json | tee ./ruby-sinatra-rps.json
+
+oc create -f ./ruby-sinatra-rps.json 
+oc get pods -o wide --watch
+
+echo '{ "kind": "List", "apiVersion": "v1", "metadata": {}, "items": [ { "kind": "Route", "apiVersion": "v1", "metadata": { "name": "ruby-sinatra-rps", "creationTimestamp": null, "labels": { "app": "ruby-sinatra-rps" } }, "spec": { "host": "ruby-sinatra-rps.cloudapps.linuxrevolution.com", "to": { "kind": "Service", "name": "ruby-sinatra-rps" }, "port": { "targetPort": "8080-tcp" }, "tls": { "termination": "edge" } }, "status": {} } ] }' | oc create -f -
+
+###
+######################### ######################### ######################### 
+#  Random bits regarding ssh keys and git creds 
+######################### ######################### ######################### 
+# IF... you want to use ssh-keys and/or a specific .gitconfig
+# JUST .gitconfig
+mkdir
+mkdir -p ~/Projects/${MYPROJ}; cd $_
+cat << EOF > ./.gitconfig
+[http]
+      sslVerify=false
+EOF
+oc secrets new mygitconfig .gitconfig=~/Projects/${MYPROJ}/.gitconfig
+oc secrets add serviceaccount/builder secrets/mygitconfig
+
+# JUST sshkey
+ssh-keygen -trsa -b2048 -N '' -i ~/Projects/${MYPROJ}/.ssh/id_rsa
+oc secrets new-sshauth mysshkey --ssh-privatekey=~/Projects/${MYPROJ}/.ssh/id_rsa
+oc secrets add serviceaccount/builder secrets/mysshkey
+
+# BOTH
+oc secrets new-sshauth mysshkey-gitconfig --ssh-privatekey=~/Projects/${MYPROJ}/.ssh/id_rsa --gitconfig=~/Projects/${MYPROJ}/.gitconfig
+oc secrets add serviceaccount/builder secrets/mysshkey-gitconfig
+
+oc edit bc
+### THEN YOU NEED TO ADD THE FOLLOWING UNDER source:git
+  source:
+    git:
+      uri: git@github.com/myrepo/project/gitfile.git
+>    sourceSecret:
+>      name: mysshkey-gitconfig
+    type: Git
 
 ######################### ######################### ######################### 
 # PROJECT RESOURCE MANAGEMENT
