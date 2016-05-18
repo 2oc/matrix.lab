@@ -254,15 +254,7 @@ oc process ruby-helloworld-sample -n ${MYPROJ} -o json > ruby-helloworld-sample
 sed -i -e 's/www.example.com/ruby-keypair.cloudapps.linuxrevolution.com/g' ruby-helloworld-sample
 oc create -f ruby-helloworld-sample
 # wait a tic... then go to...
-# https://ruby-keypair.cloudapps.matrix.lab:443/
-
-######################### ######################### ######################### 
-#  PROJECT - Nodejs example - Work in Progress
-######################### ######################### ######################### 
-oc new-project nodejs-echo --display-name="nodejs" --description="Sample Node.js app"
-oc new-app https://github.com/openshift/nodejs-ex -l name=nodejs-echo
-oc expose svc nodejs-ex --hostname=nodejs-example.cloudapps.linuxrevolution.com
-oc edit route
+# https://ruby-keypair.cloudapps.linuxrevolution.com:443/
 
 ######################### ######################### ######################### 
 #  PROJECT - S2I build of Sinatra Ruby app for Rock:Paper:Scissor 
@@ -276,6 +268,14 @@ oc create -f ./ruby-sinatra-rps.json
 oc get pods -o wide --watch
 
 echo '{ "kind": "List", "apiVersion": "v1", "metadata": {}, "items": [ { "kind": "Route", "apiVersion": "v1", "metadata": { "name": "ruby-sinatra-rps", "creationTimestamp": null, "labels": { "app": "ruby-sinatra-rps" } }, "spec": { "host": "ruby-sinatra-rps.cloudapps.linuxrevolution.com", "to": { "kind": "Service", "name": "ruby-sinatra-rps" }, "port": { "targetPort": "8080-tcp" }, "tls": { "termination": "edge" } }, "status": {} } ] }' | oc create -f -
+
+######################### ######################### ######################### 
+#  PROJECT - Nodejs example - Work in Progress
+######################### ######################### ######################### 
+oc new-project nodejs-echo --display-name="nodejs" --description="Sample Node.js app"
+oc new-app https://github.com/openshift/nodejs-ex -l name=nodejs-echo
+oc expose svc nodejs-ex --hostname=nodejs-example.cloudapps.linuxrevolution.com
+oc edit route
 
 ###
 ######################### ######################### ######################### 
