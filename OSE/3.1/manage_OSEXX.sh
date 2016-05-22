@@ -270,6 +270,15 @@ oc get pods -o wide --watch
 echo '{ "kind": "List", "apiVersion": "v1", "metadata": {}, "items": [ { "kind": "Route", "apiVersion": "v1", "metadata": { "name": "ruby-sinatra-rps", "creationTimestamp": null, "labels": { "app": "ruby-sinatra-rps" } }, "spec": { "host": "ruby-sinatra-rps.cloudapps.linuxrevolution.com", "to": { "kind": "Service", "name": "ruby-sinatra-rps" }, "port": { "targetPort": "8080-tcp" }, "tls": { "termination": "edge" } }, "status": {} } ] }' | oc create -f -
 
 ######################### ######################### ######################### 
+#  PROJECT - S2I build of PHP App for "Wipeout" type game
+######################### ######################### ######################### 
+MYPROJ="hexgl"
+oc new-project $MYPROJ
+oc new-app php:5.6~https://github.com/jradtke-rh/HexGL.git
+# Create a secure route
+echo '{ "kind": "List", "apiVersion": "v1", "metadata": {}, "items": [ { "kind": "Route", "apiVersion": "v1", "metadata": { "name": "hexgl", "creationTimestamp": null, "labels": { "app": "hexgl" } }, "spec": { "host": "hexgl.cloudapps.linuxrevolution.com", "to": { "kind": "Service", "name": "hexgl" }, "port": { "targetPort": 8080 }, "tls": { "termination": "edge" } }, "status": {} } ] }' | oc create -f -
+
+######################### ######################### ######################### 
 #  PROJECT - Nodejs example - Work in Progress
 ######################### ######################### ######################### 
 oc new-project nodejs-echo --display-name="nodejs" --description="Sample Node.js app"
