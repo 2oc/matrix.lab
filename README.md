@@ -20,11 +20,12 @@ RHEL7D is a Intel NUC with 2 x SSD installed which basically serves as a NAS (NF
 ## Build Steps
  - Build RHEL7A from DVD (manually) and register to RHN.
   - populate entire list of KVM guests in /etc/hosts
-  - Build RH7SAT6 and register to RHN
+  - Build RH7SAT6 and register to RHN (sync channels)
   - Build RH7IDM01/02 and register to RH7SAT6
-   - update DNS using 'ipa' command found in finish script
+   -- update DNS using 'ipa' command found in finish script
+  - Update DNS entries on all hosts to now point to the IDM systems
   - Build RH6RHEVMGR
- - Build RHEL7D and create iSCSI targets
+ - Build RHEL7D and create iSCSI targets and NFS shares (for OpenShift)
  - Build RHEL7B/7C with RHEL7
   - Attach RHEL7B and 7C to RH6RHEVMGR to make them RHEV Hypervisors 
   - point RHEV Manager at RHEL7D for Storage
