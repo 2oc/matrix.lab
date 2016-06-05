@@ -93,7 +93,11 @@ openssl s_client -connect host:port -servername host
 
 # Grab the Cert
 $HOSTNAME=myhost.example.private
-echo | openssl s_client -connect ${HOSTNAME}:443 | sed -n /BEGIN/,/END/p > ${HOSTNAME}
+echo | openssl s_client -connect ${HOSTNAME}:443 -servername ${HOSTNAME} | sed -n /BEGIN/,/END/p > ${HOSTNAME}.crt
+openssl x509 -in ${HOSTNAME}.crt -text
+# Check SSL/TLS 
+nmap --script ssl-enum-ciphers -p 8443 api.linuxrevolution.com
+
 
 #  Region and Zone explained
 #  Think of region like a data center (Affinity)
@@ -107,4 +111,7 @@ find . -name "*.json" -exec oc create -f {} \;
 
 curl -x localhost:3128 https://registry.access.redhat.com/v1/_ping
 
+# Cleanup (remove) non-running containers
 docker rm -v $(docker ps -a -q -f status=exited)
+# Remove dangling images
+docker rmi $(docker images -q -f dangling=true)
