@@ -115,3 +115,5 @@ curl -x localhost:3128 https://registry.access.redhat.com/v1/_ping
 docker rm -v $(docker ps -a -q -f status=exited)
 # Remove dangling images
 docker rmi $(docker images -q -f dangling=true)
+# Show duplicate images
+docker images |awk 'BEGIN { FS=" " } { c[$3]++; l[$3,c[$3]]=$0 } END { for (i in c) { if (c[i] > 1) for (j = 1; j <= c[i]; j++) print l[i,j] } }'
