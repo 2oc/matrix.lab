@@ -59,12 +59,12 @@ oc create -f ruby-helloworld-sample
 #  PROJECT - S2I build of Sinatra Ruby app for Rock:Paper:Scissor
 ######################### ######################### #########################
 MYPROJ="ruby-sinatra-rps"
-oc project ${MYPROJ}
+oc new-project ${MYPROJ}
 mkdir ~/Projects/$_; cd $_
 oc new-app https://github.com/jradtke-rh/ruby-sinatra-rps.git -o json | tee ./ruby-sinatra-rps.json
 
 oc create -f ./ruby-sinatra-rps.json
-oc get pods -o wide --watch
+#oc get pods -o wide --watch
 
 echo '{ "kind": "List", "apiVersion": "v1", "metadata": {}, "items": [ { "kind": "Route", "apiVersion": "v1", "metadata": { "name": "ruby-sinatra-rps", "creationTimestamp": null, "labels": { "app": "ruby-sinatra-rps" } }, "spec": { "host": "ruby-sinatra-rps.cloudapps.linuxrevolution.com", "to": { "kind": "Service", "name": "ruby-sinatra-rps" }, "port": { "targetPort": "8080-tcp" }, "tls": { "termination": "edge" } }, "status": {} } ] }' | oc create -f -
 
