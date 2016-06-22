@@ -1,6 +1,10 @@
 # matrix.lab
 
 ## OVERVIEW
+
+This repo exists specifically to maintain my homelab.
+
+
 | Hostname  | Purpose | Proc, Mem Size |
 | :----- |:---------------:| --------------:|
 | RHEL7A | KVM Host        | i5-3570K, 16GB
